@@ -1,0 +1,191 @@
+;/////////////////////////////////////////////////////////////////////////////////
+;// Code Generator: BoostC Compiler - http://www.sourceboost.com
+;// Version       : 7.03
+;// License Type  : Pro License
+;// Limitations   : PIC12,PIC16 max code size:Unlimited, max RAM banks:Unlimited
+;/////////////////////////////////////////////////////////////////////////////////
+
+	ORG 0x00000000
+0000  285E  	GOTO	_startup
+	ORG 0x00000004
+0004  00FF  	MOVWF Int1Context
+0005  0E03  	SWAPF STATUS, W
+0006  1283  	BCF STATUS, RP0
+0007  1303  	BCF STATUS, RP1
+0008  00B4  	MOVWF Int1BContext
+0009  0E0A  	SWAPF PCLATH, W
+000A  00B5  	MOVWF Int1BContext+D'1'
+000B  0E04  	SWAPF FSR, W
+000C  00B6  	MOVWF Int1BContext+D'2'
+000D  118A  	BCF PCLATH,3
+000E  120A  	BCF PCLATH,4
+000F  288E  	GOTO	interrupt
+	ORG 0x00000010
+0010        FC_CAL_UAR_00064
+0010        ; { FC_CAL_UART_Send_1 ; function begin
+0010        label1
+0010  1E0C  	BTFSS gbl_pir1,4
+0011  2810  	GOTO	label1
+0012  084E  	MOVF FC_CAL_UAR_00064_arg_nChar, W
+0013  0099  	MOVWF gbl_txreg
+0014  0008  	RETURN
+0015        ; } FC_CAL_UART_Send_1 function end
+
+	ORG 0x00000015
+0015        FC_CAL_UAR_00063
+0015        ; { FC_CAL_UART_Init_1 ; function begin
+0015  1683  	BSF STATUS, RP0
+0016  1303  	BCF STATUS, RP1
+0017  1518  	BSF gbl_txsta,2
+0018  3081  	MOVLW 0x81
+0019  0099  	MOVWF gbl_spbrg
+001A  1283  	BCF STATUS, RP0
+001B  0198  	CLRF gbl_rcsta
+001C  1798  	BSF gbl_rcsta,7
+001D  1683  	BSF STATUS, RP0
+001E  1698  	BSF gbl_txsta,5
+001F  1283  	BCF STATUS, RP0
+0020  1618  	BSF gbl_rcsta,4
+0021  1683  	BSF STATUS, RP0
+0022  128C  	BCF gbl_pie1,5
+0023  0008  	RETURN
+0024        ; } FC_CAL_UART_Init_1 function end
+
+	ORG 0x00000024
+0024        FCD_RS2320_00068
+0024        ; { FCD_RS2320_SendRS232Char ; function begin
+0024  084C  	MOVF FCD_RS2320_00068_arg_nChar, W
+0025  00CE  	MOVWF FC_CAL_UAR_00064_arg_nChar
+0026  084D  	MOVF FCD_RS2320_00068_arg_nChar+D'1', W
+0027  00CF  	MOVWF FC_CAL_UAR_00064_arg_nChar+D'1'
+0028  2010  	CALL FC_CAL_UAR_00064
+0029  0008  	RETURN
+002A        ; } FCD_RS2320_SendRS232Char function end
+
+	ORG 0x0000002A
+002A        main
+002A        ; { main ; function begin
+002A  1683  	BSF STATUS, RP0
+002B  1703  	BSF STATUS, RP1
+002C  0188  	CLRF gbl_ansel
+002D  0189  	CLRF gbl_anselh
+002E  2015  	CALL FC_CAL_UAR_00063
+002F  30C0  	MOVLW 0xC0
+0030  0081  	MOVWF gbl_option_reg
+0031  3001  	MOVLW 0x01
+0032  1283  	BCF STATUS, RP0
+0033  00CB  	MOVWF gbl_FCV_DIGIT
+0034  30FE  	MOVLW 0xFE
+0035  1683  	BSF STATUS, RP0
+0036  0505  	ANDWF gbl_trisa, W
+0037  0085  	MOVWF gbl_trisa
+0038  30FE  	MOVLW 0xFE
+0039  1283  	BCF STATUS, RP0
+003A  0505  	ANDWF gbl_porta, W
+003B  0085  	MOVWF gbl_porta
+003C  30DF  	MOVLW 0xDF
+003D  1683  	BSF STATUS, RP0
+003E  0506  	ANDWF gbl_trisb, W
+003F  0086  	MOVWF gbl_trisb
+0040  30DF  	MOVLW 0xDF
+0041  1283  	BCF STATUS, RP0
+0042  0506  	ANDWF gbl_portb, W
+0043  0086  	MOVWF gbl_portb
+0044  30EF  	MOVLW 0xEF
+0045  1683  	BSF STATUS, RP0
+0046  0506  	ANDWF gbl_trisb, W
+0047  0086  	MOVWF gbl_trisb
+0048  30EF  	MOVLW 0xEF
+0049  1283  	BCF STATUS, RP0
+004A  0506  	ANDWF gbl_portb, W
+004B  0086  	MOVWF gbl_portb
+004C  307B  	MOVLW 0x7B
+004D  00B9  	MOVWF gbl_FCV_QUE1
+004E  01BA  	CLRF gbl_FCV_QUE1+D'1'
+004F  30C8  	MOVLW 0xC8
+0050  00BB  	MOVWF gbl_FCV_QUE2
+0051  3001  	MOVLW 0x01
+0052  00BC  	MOVWF gbl_FCV_QUE2+D'1'
+0053  3015  	MOVLW 0x15
+0054  00BD  	MOVWF gbl_FCV_QUE3
+0055  3003  	MOVLW 0x03
+0056  00BE  	MOVWF gbl_FCV_QUE3+D'1'
+0057  3001  	MOVLW 0x01
+0058  00CA  	MOVWF gbl_FCV_WIN
+0059        label2
+0059  3061  	MOVLW 0x61
+005A  00CC  	MOVWF FCD_RS2320_00068_arg_nChar
+005B  01CD  	CLRF FCD_RS2320_00068_arg_nChar+D'1'
+005C  2024  	CALL FCD_RS2320_00068
+005D  2859  	GOTO	label2
+005E        ; } main function end
+
+	ORG 0x0000005E
+005E        _startup
+005E  30D5  	MOVLW 0xD5
+005F  1283  	BCF STATUS, RP0
+0060  1303  	BCF STATUS, RP1
+0061  00A0  	MOVWF gbl_14_LSR
+0062  30C4  	MOVLW 0xC4
+0063  00A1  	MOVWF gbl_14_LSR+D'1'
+0064  30BB  	MOVLW 0xBB
+0065  00A2  	MOVWF gbl_14_LSR+D'2'
+0066  30DC  	MOVLW 0xDC
+0067  00A3  	MOVWF gbl_14_LSR+D'3'
+0068  01A4  	CLRF gbl_15_gbl_aSig
+0069  01A5  	CLRF gbl_15_gbl_aSig+D'1'
+006A  01A6  	CLRF gbl_15_gbl_aSig+D'2'
+006B  01A7  	CLRF gbl_15_gbl_aSig+D'3'
+006C  01A8  	CLRF gbl_15_gbl_bSig
+006D  01A9  	CLRF gbl_15_gbl_bSig+D'1'
+006E  01AA  	CLRF gbl_15_gbl_bSig+D'2'
+006F  01AB  	CLRF gbl_15_gbl_bSig+D'3'
+0070  01AC  	CLRF gbl_15_gbl_zSig
+0071  01AD  	CLRF gbl_15_gbl_zSig+D'1'
+0072  01AE  	CLRF gbl_15_gbl_zSig+D'2'
+0073  01AF  	CLRF gbl_15_gbl_zSig+D'3'
+0074  01C4  	CLRF gbl_15_gbl_aExp
+0075  01C5  	CLRF gbl_15_gbl_bExp
+0076  01B7  	CLRF gbl_15_gbl_zExp
+0077  01B8  	CLRF gbl_15_gbl_zExp+D'1'
+0078  01C6  	CLRF gbl_15_gbl_aSign
+0079  01C7  	CLRF gbl_15_gbl_bSign
+007A  01C8  	CLRF gbl_15_gbl_zSign
+007B  01C9  	CLRF gbl_15_gbl_zSigZero
+007C  01B0  	CLRF gbl_15_gbl_ret
+007D  01B1  	CLRF gbl_15_gbl_ret+D'1'
+007E  01B2  	CLRF gbl_15_gbl_ret+D'2'
+007F  01B3  	CLRF gbl_15_gbl_ret+D'3'
+0080  01C2  	CLRF gbl_float_rounding_mode
+0081  01C3  	CLRF gbl_float_exception_flags
+0082  01C1  	CLRF gbl_float_detect_tininess
+0083  01B9  	CLRF gbl_FCV_QUE1
+0084  01BA  	CLRF gbl_FCV_QUE1+D'1'
+0085  01BB  	CLRF gbl_FCV_QUE2
+0086  01BC  	CLRF gbl_FCV_QUE2+D'1'
+0087  01BD  	CLRF gbl_FCV_QUE3
+0088  01BE  	CLRF gbl_FCV_QUE3+D'1'
+0089  01BF  	CLRF gbl_FCV_IHAP
+008A  01C0  	CLRF gbl_FCV_IHAP+D'1'
+008B  118A  	BCF PCLATH,3
+008C  120A  	BCF PCLATH,4
+008D  282A  	GOTO	main
+	ORG 0x0000008E
+008E        interrupt
+008E        ; { interrupt ; function begin
+008E  1283  	BCF STATUS, RP0
+008F  1303  	BCF STATUS, RP1
+0090  0E36  	SWAPF Int1BContext+D'2', W
+0091  0084  	MOVWF FSR
+0092  0E35  	SWAPF Int1BContext+D'1', W
+0093  008A  	MOVWF PCLATH
+0094  0E34  	SWAPF Int1BContext, W
+0095  0083  	MOVWF STATUS
+0096  0EFF  	SWAPF Int1Context, F
+0097  0E7F  	SWAPF Int1Context, W
+0098  0009  	RETFIE
+0099        ; } interrupt function end
+
+	ORG 0x00002007
+2007  20D2  	DW 0x20D2
+2008  3EFF  	DW 0x3EFF

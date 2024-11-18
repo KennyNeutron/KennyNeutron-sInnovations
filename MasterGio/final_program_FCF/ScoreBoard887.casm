@@ -1,0 +1,5985 @@
+;/////////////////////////////////////////////////////////////////////////////////
+;// Code Generator: BoostC Compiler - http://www.sourceboost.com
+;// Version       : 7.03
+;// License Type  : Pro License
+;// Limitations   : PIC12,PIC16 max code size:Unlimited, max RAM banks:Unlimited
+;/////////////////////////////////////////////////////////////////////////////////
+
+/*********************************************************************
+ *                  Flowcode CAL String File
+ *
+ * File: PIC_CAL_String.c
+ *
+ * (c) 2011 Matrix Multimedia Ltd.
+ * http://www.matrixmultimedia.com
+ *
+ * Software License Agreement
+ *
+ * The software supplied herewith by Matrix Multimedia Ltd (the
+ * “Company”) for its Flowcode graphical programming language is
+ * intended and supplied to you, the Company’s customer, for use
+ * solely and exclusively on the Company's products. The software
+ * is owned by the Company, and is protected under applicable
+ * copyright laws. All rights are reserved. Any use in violation
+ * of the foregoing restrictions may subject the user to criminal
+ * sanctions under applicable laws, as well as to civil liability
+ * for the breach of the terms and conditions of this licence.
+ *
+ * THIS SOFTWARE IS PROVIDED IN AN “AS IS” CONDITION. NO WARRANTIES,
+ * WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT NOT LIMITED
+ * TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ * PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. THE COMPANY SHALL NOT,
+ * IN ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL OR
+ * CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
+ *
+ * Changelog:
+ *
+ *  date  | by | description
+ * -------+----+-----------------------------------------------------
+ * 010911 | BR | Created
+ * 150911 | JW | Added v5 string functions
+ * 270212 | BR | Fixed an issue with ToUpper where the 1st character was being returned as null
+ * 120312 | BR | Fixed an issue with some of the float functions not using CAL functions
+ */
+
+
+// Useful call for finding the length of an (uncorrupted) string
+#define FCI_GETLENGTH__x(str, max, idx)         for (idx = 0; idx < max; idx++) if (str[idx] == 0) break
+#define FCI_STRMOV__x(str, max, dst, dlen, ix)  for (ix = 0; ix < (max) && ix < (dlen) && str[ix] != '\0'; ix++) dst[ix] = str[ix]
+#define FCI_CONCATENATE(s0, l0, s1, l1, sd, ld) FCI_SHEAD(s0, l0, s1, l1, sd, ld)
+
+
+#ifndef MX_USES_UINT32
+	#define MX_USES_UINT32 0
+#endif
+#ifndef MX_USES_SINT32
+	#define MX_USES_SINT32 0
+#endif
+
+
+#if (MX_USES_UINT32 || MX_USES_SINT32)
+	#define MX_STRF_LONG
+	#define MX_ULONG MX_UINT32
+	#define MX_SLONG MX_SINT32
+#else
+	#define MX_ULONG MX_UINT16
+	#define MX_SLONG MX_SINT16
+#endif
+
+
+//String function definitions
+MX_UINT8 FCI_GETCHAR(MX_STRING sStr1, MX_UINT8 iStr1_len, MX_UINT8 iPos);
+MX_UINT8 FCI_GETLENGTH(MX_STRING sStr1, MX_UINT8 iStr1_len);
+MX_UINT8 FCI_MIDSTRING(MX_STRING sSrc, MX_UINT8 iSrc_len, MX_UINT8 iStart, MX_UINT8 iCount, MX_STRING sDst, MX_UINT8 iDst_len);
+MX_UINT8 FCI_LEFTSTRING(MX_STRING sSrc, MX_UINT8 iSrc_len, MX_UINT8 iCount, MX_STRING sDst, MX_UINT8 iDst_len);
+MX_UINT8 FCI_RIGHTSTRING(MX_STRING sSrc, MX_UINT8 iSrc_len, MX_UINT8 iCount, MX_STRING sDst, MX_UINT8 iDst_len);
+MX_UINT8 FCI_TOSTRING(MX_SLONG iSrc1, MX_STRING sDst, MX_UINT8 iDst_len);
+void FCI_TOLOWER(MX_STRING sSrc, MX_UINT8 iSrc_len, MX_STRING sDst, MX_UINT8 iDst_len);
+void FCI_TOUPPER(MX_STRING sSrc, MX_UINT8 iSrc_len, MX_STRING sDst, MX_UINT8 iDst_len);
+MX_UINT8 FCI_COMPARE(MX_STRING sSrc1, MX_UINT8 iSrc1_len, MX_STRING sSrc2, MX_UINT8 iSrc2_len, MX_UINT8 iNoCase);
+MX_UINT8 FCI_FLOAT_TO_STRING(MX_FLOAT Number, MX_UINT8 Precision, MX_STRING String, MX_UINT8 MSZ_String);
+MX_UINT8 FCI_NUMBER_TO_HEX(MX_ULONG Number, MX_STRING String, MX_UINT8 MSZ_String);
+MX_SINT32 FCI_STRING_TO_INT(MX_STRING String, MX_UINT8 MSZ_String);
+MX_FLOAT FCI_STRING_TO_FLOAT(MX_STRING String, MX_UINT8 MSZ_String);
+
+// Functions for contatenation
+MX_UINT8 FCI_STRREV(MX_STRING sSrc, MX_UINT8 iSrc_len, MX_STRING sDst, MX_UINT8 iDst_len);
+MX_UINT8 FCI_STRMOV(MX_STRING sSrc, MX_UINT8 iSrc_len, MX_STRING sDst, MX_UINT8 iDst_len);
+void FCI_SHEAD(MX_STRING sSrc1, MX_UINT8 iSrc1_len, MX_STRING sSrc2, MX_UINT8 iSrc2_len, MX_STRING sDst, MX_UINT8 iDst_len);
+void FCI_SCOPY(MX_STRING sSrc, MX_UINT8 iSrc_len, MX_STRING sDst, MX_UINT8 iDst_len);
+
+
+
+MX_UINT8 FCI_GETCHAR(MX_STRING sStr1, MX_UINT8 iStr1_len, MX_UINT8 iPos)
+{
+	MX_UINT8 tmp;
+	FCI_GETLENGTH__x(sStr1, iStr1_len, tmp);
+
+	if(iPos < tmp)
+		return sStr1[iPos];
+	return '\0';
+}
+
+MX_UINT8 FCI_GETLENGTH(MX_STRING sStr1, MX_UINT8 iStr1_len)
+{
+	MX_UINT8 tmp;
+	FCI_GETLENGTH__x(sStr1, iStr1_len, tmp);
+	return (tmp);
+}
+
+MX_UINT8 FCI_MIDSTRING(MX_STRING sSrc, MX_UINT8 iSrc_len, MX_UINT8 iStart, MX_UINT8 iCount, MX_STRING sDst, MX_UINT8 iDst_len)
+{
+	if (iDst_len == 0) return 0;
+	MX_UINT8 idx;
+	FCI_GETLENGTH__x(sSrc, iSrc_len, idx);	//find the length of the source string
+
+	if (iStart >= idx)
+	{
+		*sDst = '\0';						//starting position is beyond string length, so return a null string
+	}
+	else
+	{
+		if ((iStart + iCount) >= idx)		//Make sure the required length is not too big
+			iCount = idx - iStart;
+		if (iCount > (iDst_len))			//make sure the required length is not too big
+			iCount = (iDst_len);
+
+		sSrc += iStart;						//Move to the correct place in the source string
+
+		for (idx = 0; idx < iCount; idx++)	//Copy the contents of the source string
+		{
+			*sDst = *sSrc;
+			sDst++;
+			sSrc++;
+		}
+		if (idx < iDst_len)						//add terminating null (if we can)
+			*sDst = '\0';
+	}
+	return (idx);
+}
+
+MX_UINT8 FCI_LEFTSTRING(MX_STRING sSrc, MX_UINT8 iSrc_len, MX_UINT8 iCount, MX_STRING sDst, MX_UINT8 iDst_len)
+{
+	if (iDst_len == 0) return 0;
+	MX_UINT8 idx;
+	FCI_GETLENGTH__x(sSrc, iSrc_len, idx);	//find the length of the source string
+
+	if (iCount > idx)						//make sure the required length is not too big
+		iCount = idx;
+	if (iCount > (iDst_len))			//make sure the required length is not too big
+		iCount = (iDst_len);
+
+	for (idx = 0; idx < iCount; idx++)		//copy the required MX_UINT8acters
+	{
+		*sDst = *sSrc;
+		sDst++;
+		sSrc++;
+	}
+	if (idx < iDst_len)						//add terminating null (if we can)
+		*sDst = '\0';
+	return (idx);
+}
+
+MX_UINT8 FCI_RIGHTSTRING(MX_STRING sSrc, MX_UINT8 iSrc_len, MX_UINT8 iCount, MX_STRING sDst, MX_UINT8 iDst_len)
+
+{
+	if (iDst_len == 0) return 0;
+050A  08BE  	MOVF FCI_RIGHTS_00048_arg_iDst_len, F
+050B  1D03  	BTFSS STATUS,Z
+050C  2D0F  	GOTO	label88
+050D  01C1  	CLRF CompTempVarRet2006
+050F        label88
+
+	MX_UINT8 idx;
+	MX_UINT8 delta;
+
+	FCI_GETLENGTH__x(sSrc, iSrc_len, idx);	//find the length of the source string
+050F  01BF  	CLRF FCI_RIGHTS_00048_1_idx
+0510        label89
+0510  083A  	MOVF FCI_RIGHTS_00048_arg_iSrc_len, W
+0511  023F  	SUBWF FCI_RIGHTS_00048_1_idx, W
+0512  1803  	BTFSC STATUS,C
+0513  2D1F  	GOTO	label90
+0514  1383  	BCF STATUS,IRP
+0515  1839  	BTFSC FCI_RIGHTS_00048_arg_sSrc+D'1',0
+0516  1783  	BSF STATUS,IRP
+0517  0838  	MOVF FCI_RIGHTS_00048_arg_sSrc, W
+0518  073F  	ADDWF FCI_RIGHTS_00048_1_idx, W
+0519  0084  	MOVWF FSR
+051A  0880  	MOVF INDF, F
+051B  1903  	BTFSC STATUS,Z
+051C  2D1F  	GOTO	label90
+051D  0ABF  	INCF FCI_RIGHTS_00048_1_idx, F
+051E  2D10  	GOTO	label89
+051F        label90
+
+
+	if (iCount > idx)						//make sure the required length is not too big
+051F  083B  	MOVF FCI_RIGHTS_00048_arg_iCount, W
+0520  023F  	SUBWF FCI_RIGHTS_00048_1_idx, W
+0521  1803  	BTFSC STATUS,C
+0522  2D25  	GOTO	label91
+0525        label91
+
+		iCount = idx;
+0523  083F  	MOVF FCI_RIGHTS_00048_1_idx, W
+0524  00BB  	MOVWF FCI_RIGHTS_00048_arg_iCount
+
+	delta = idx - iCount;					//get the offset
+0525  083B  	MOVF FCI_RIGHTS_00048_arg_iCount, W
+0526  023F  	SUBWF FCI_RIGHTS_00048_1_idx, W
+0527  00C0  	MOVWF FCI_RIGHTS_00048_1_delta
+
+	if (iCount > (iDst_len))				//make sure the required length is not too big
+0528  083B  	MOVF FCI_RIGHTS_00048_arg_iCount, W
+0529  023E  	SUBWF FCI_RIGHTS_00048_arg_iDst_len, W
+052A  1803  	BTFSC STATUS,C
+052B  2D2E  	GOTO	label92
+052E        label92
+
+		iCount = (iDst_len);
+052C  083E  	MOVF FCI_RIGHTS_00048_arg_iDst_len, W
+052D  00BB  	MOVWF FCI_RIGHTS_00048_arg_iCount
+
+	sSrc += delta;							//Move to the correct place in the source string
+052E  0840  	MOVF FCI_RIGHTS_00048_1_delta, W
+052F  07B8  	ADDWF FCI_RIGHTS_00048_arg_sSrc, F
+0530  1803  	BTFSC STATUS,C
+0531  0AB9  	INCF FCI_RIGHTS_00048_arg_sSrc+D'1', F
+
+
+	for(idx = 0; idx < iCount; idx++)		//copy the required MX_UINT8acters
+0532  01BF  	CLRF FCI_RIGHTS_00048_1_idx
+0533        label93
+0533  083B  	MOVF FCI_RIGHTS_00048_arg_iCount, W
+0534  023F  	SUBWF FCI_RIGHTS_00048_1_idx, W
+0535  1803  	BTFSC STATUS,C
+0536  2D4D  	GOTO	label94
+054B  0ABF  	INCF FCI_RIGHTS_00048_1_idx, F
+054C  2D33  	GOTO	label93
+054D        label94
+
+	{
+		*sDst = *sSrc;
+0537  1383  	BCF STATUS,IRP
+0538  1839  	BTFSC FCI_RIGHTS_00048_arg_sSrc+D'1',0
+0539  1783  	BSF STATUS,IRP
+053A  0838  	MOVF FCI_RIGHTS_00048_arg_sSrc, W
+053B  0084  	MOVWF FSR
+053C  0800  	MOVF INDF, W
+053D  00C2  	MOVWF CompTempVar2008
+053E  1383  	BCF STATUS,IRP
+053F  183D  	BTFSC FCI_RIGHTS_00048_arg_sDst+D'1',0
+0540  1783  	BSF STATUS,IRP
+0541  083C  	MOVF FCI_RIGHTS_00048_arg_sDst, W
+0542  0084  	MOVWF FSR
+0543  0842  	MOVF CompTempVar2008, W
+0544  0080  	MOVWF INDF
+
+		sDst++;
+0545  0ABC  	INCF FCI_RIGHTS_00048_arg_sDst, F
+0546  1903  	BTFSC STATUS,Z
+0547  0ABD  	INCF FCI_RIGHTS_00048_arg_sDst+D'1', F
+
+		sSrc++;
+0548  0AB8  	INCF FCI_RIGHTS_00048_arg_sSrc, F
+0549  1903  	BTFSC STATUS,Z
+054A  0AB9  	INCF FCI_RIGHTS_00048_arg_sSrc+D'1', F
+
+	}
+	if (idx < iDst_len)						//add terminating null (if we can)
+054D  083E  	MOVF FCI_RIGHTS_00048_arg_iDst_len, W
+054E  023F  	SUBWF FCI_RIGHTS_00048_1_idx, W
+054F  1803  	BTFSC STATUS,C
+0550  2D58  	GOTO	label95
+0558        label95
+
+		*sDst = '\0';
+0551  1383  	BCF STATUS,IRP
+0552  183D  	BTFSC FCI_RIGHTS_00048_arg_sDst+D'1',0
+0553  1783  	BSF STATUS,IRP
+0554  083C  	MOVF FCI_RIGHTS_00048_arg_sDst, W
+0555  0084  	MOVWF FSR
+0556  3000  	MOVLW 0x00
+0557  0080  	MOVWF INDF
+
+	return (idx);
+0558  083F  	MOVF FCI_RIGHTS_00048_1_idx, W
+0559  00C1  	MOVWF CompTempVarRet2006
+
+}
+050E  0008  	RETURN
+055A  0008  	RETURN
+
+
+MX_UINT8 FCI_TOSTRING(MX_SLONG iSrc1, MX_STRING sDst, MX_UINT8 iDst_len)
+{
+	if (iDst_len == 0) return 0;
+	MX_UINT8 tmp1;
+
+	#ifdef MX_STRF_LONG
+		unsigned long top = 1000000000; 	// Maximum power of 10 less than 4294967296
+	#else
+		unsigned short top = 10000; 		// Maximum power of 10 less than 65536
+	#endif
+
+	MX_UINT8 idx = 0;
+
+	//copy source 1 into destination:
+	//minus sign
+	if (iSrc1 < 0)
+	{
+		sDst[0] = '-';
+		idx++;
+		iSrc1 = -iSrc1;
+	}
+
+	tmp1 = 0;    // Nothing added yet
+	if (iSrc1 == 0) // Force showing zero
+	{
+		tmp1 = 1;
+		top = 1;
+	}
+	while (( idx < iDst_len) && (top > 0))
+	{
+		#ifdef MX_STRF_LONG
+		if (((unsigned long)iSrc1 >= top) || (tmp1))
+		#else
+		if (((unsigned)iSrc1 >= top) || (tmp1))
+		#endif
+		{
+			#ifdef MX_STRF_LONG
+			tmp1 = (unsigned long)iSrc1 / top;	// Top digit
+			#else
+			tmp1 = (unsigned)iSrc1 / top;	// Top digit
+			#endif
+			sDst[idx] = '0' + tmp1;			// Add digit to buffer
+			idx++;
+			iSrc1 -= tmp1 * top;			// Remove digit
+			tmp1 = 1;						// Add zeros now
+		}
+		top /= 10;							// Go to next digit
+	}
+
+	if (idx < iDst_len)						//add terminating null (if we can)
+		sDst[idx] = '\0';
+	return (idx);
+}
+
+
+
+void FCI_TOLOWER(MX_STRING sSrc, MX_UINT8 iSrc_len, MX_STRING sDst, MX_UINT8 iDst_len)
+{
+	if (iDst_len == 0) return;
+	MX_UINT8 idx;
+	MX_UINT8 ch;
+
+	if (iSrc_len < iDst_len) iSrc_len = iDst_len; // Bound so cant overflow dest
+	//copy source into destination and change to lower case
+	for (idx=0; idx<iSrc_len; idx++)
+	{
+		ch = sSrc[idx];
+		if ((ch >= 'A') && (ch <= 'Z'))
+		{
+			ch ^= 0x20;
+		}
+		sDst[idx] = ch;
+		if (ch == 0)
+		{
+			break;
+		}
+	}
+	if (idx < iDst_len)						//add terminating null (if we can)
+		sDst[idx] = '\0';
+}
+
+void FCI_TOUPPER(MX_STRING sSrc, MX_UINT8 iSrc_len, MX_STRING sDst, MX_UINT8 iDst_len)
+{
+	if (iDst_len == 0) return;
+	MX_UINT8 idx;
+	MX_UINT8 ch;
+
+	if (iSrc_len < iDst_len) iSrc_len = iDst_len; // Bound so cant overflow dest
+	//copy source into destination and change to upper case
+	for (idx=0; idx<iSrc_len; idx++)
+	{
+		ch = sSrc[idx];
+		if ((ch >= 'a') && (ch <= 'z'))
+		{
+			ch ^= 0x20;
+		}
+		sDst[idx] = ch;
+		if (ch == 0)
+		{
+			break;
+		}
+	}
+	if (idx < iDst_len)						//add terminating null (if we can)
+		sDst[idx] = '\0';
+}
+
+MX_UINT8 FCI_COMPARE(MX_STRING sSrc1, MX_UINT8 iSrc1_len, MX_STRING sSrc2, MX_UINT8 iSrc2_len, MX_UINT8 iNoCase)
+{
+	MX_UINT8 iRetVal = 0;
+	MX_UINT8 idx;
+	MX_UINT8 ch1, ch2;
+
+	for (idx=0; idx < iSrc1_len; idx++)	//compare a byte from the strings
+	{
+		if (idx < iSrc2_len)
+		{
+			ch1 = *sSrc1;
+			ch2 = *sSrc2;
+
+			if (iNoCase)
+			{
+				if ((ch1 >= 'a') && (ch1 <= 'z'))
+					ch1 = (ch1 & 0xDF);
+
+				if ((ch2 >= 'a') && (ch2 <= 'z'))
+					ch2 = (ch2 & 0xDF);
+
+			}
+
+			if (ch1 < ch2)
+			{
+				return(255);
+			}
+			else if (ch1 > ch2)
+			{
+				return(1);
+			}
+
+			sSrc1++;
+			sSrc2++;
+		}
+		else
+		{
+			if (*sSrc1 == 0)
+				return (0);				//end of source1 as well, so ok
+			else
+				return (1);				//reached the end of iSrc2, but still more of iSrc1
+		}
+	}
+
+	if (iSrc1_len == iSrc2_len)			//reached the end of iSrc1.  If we're also at the end of iSrc2, then return 0
+		return (0);
+	else
+	{
+		if (*sSrc2 == 0)
+			return (0);					//end of source1 as well, so ok
+		else
+			return (255);				//not at end of source2, so return -1
+	}
+}
+
+
+MX_UINT8 FCI_FLOAT_TO_STRING(MX_FLOAT Number, MX_UINT8 Precision, MX_STRING String, MX_UINT8 MSZ_String)
+{
+	MX_SINT16 whole;
+	MX_UINT8 str_length;
+	MX_UINT8 idx;
+	MX_UINT8 stringidx = 0;
+	MX_FLOAT real, temp;
+	MX_UINT8 old;
+	MX_UINT8 temp_string[10];
+
+	#ifdef _BOOSTC									//BoostC Floating Point
+
+		float_rounding_mode = 3;					//Always round to zero
+		whole = float32_to_int32(Number);			//Convert to whole integer
+		temp = float32_from_int32(whole);			//Convert whole number back to floating point
+
+		if (float32_ge(Number,0))
+		{
+			real = float32_sub(Number, temp);		//Subtract whole number from floating point number
+		}
+		else
+		{
+			if (whole == 0)							//Fix -0 bug
+			{
+				String[stringidx] = '-';
+				stringidx = stringidx + 1;
+			}
+
+			real = float32_sub(temp, Number);		//Subtract floating point number from whole number
+		}
+	#endif
+
+	#ifdef HI_TECH_C								//HiTECH Floating Point
+
+		whole = (int)Number;						//Convert to whole integer
+		temp = whole;								//Convert whole number back to floating point
+
+		if (Number >= 0)
+		{
+			real = Number - temp;					//Subtract whole number from floating point number
+		}
+		else
+		{
+			if (whole == 0)							//Fix -0 bug
+			{
+				String[stringidx] = '-';
+				stringidx = stringidx + 1;
+			}
+
+			real = temp - Number;					//Subtract floating point number from whole number
+		}
+	#endif
+
+	str_length = FCI_TOSTRING(whole, temp_string, 5);		//Convert integer numbers to strings
+
+	for (idx=0; idx<str_length; idx++)						//Copy whole part of number to string
+	{
+		if(stringidx < MSZ_String)
+		{
+			String[stringidx] = temp_string[idx];
+			stringidx = stringidx + 1;
+		}
+	}
+
+	if(stringidx < MSZ_String)						//Add decimal point to string
+	{
+		String[stringidx] = '.';
+		stringidx = stringidx + 1;
+	}
+
+	for (idx = 0; idx < Precision; idx++)			//Output Real Part Of Number
+	{
+		if (stringidx >= MSZ_String)
+			break;
+
+		#ifdef _BOOSTC								//BoostC Floating Point
+			real = float32_mul(real, 10);
+			whole = float32_to_int32(real);			//Convert to whole integer
+			temp = float32_from_int32(whole);		//Convert whole number back to floating point
+			real = float32_sub(real, temp);			//Subtract whole number from floating point number
+		#endif
+		#ifdef HI_TECH_C							//HiTECH Floating Point
+			real = real * 10;
+			whole = (int)real;						//Convert to whole integer
+			temp = whole;							//Convert whole number back to floating point
+			real = real - temp;						//Subtract whole number from floating point number
+		#endif
+
+		String[stringidx] = '0' + whole;
+		stringidx = stringidx + 1;
+	}
+
+	if(stringidx < MSZ_String)									//Add null termination to string
+	{
+		String[stringidx] = 0;
+	}
+
+	return stringidx;
+}
+
+
+
+
+
+
+
+
+
+
+
+MX_UINT8 FCI_NUMBER_TO_HEX(MX_ULONG Number, MX_STRING String, MX_UINT8 MSZ_String)
+{
+	MX_UINT8 stringidx;
+	MX_UINT8 idx = 0;
+	MX_UINT8 temp;
+	MX_UINT8 digit[8] = {0,0,0,0,0,0,0,0};
+
+	#ifdef MX_STRF_LONG
+		MX_UINT32 num = Number;
+	#else
+		MX_UINT16 num = Number;
+	#endif
+
+	//Check that output string is long enough to store result
+	if((Number > 0xFFFF) && (MSZ_String < 10))
+		return 0;
+
+	if((Number > 0xFF) && (MSZ_String < 6))
+		return 0;
+
+	if((Number <= 0xFF) && (MSZ_String < 4))
+		return 0;
+
+	//Initialise start of string with hexadecimal indicator
+	String[0] = '0';
+	String[1] = 'x';
+
+	//Calculate hex values
+	do
+	{
+		temp = num % 16;
+		num = num >> 4;
+
+		if(temp > 9)
+		{
+			temp = temp - 10;
+			digit[idx] = temp + 'A';
+		}
+		else
+			digit[idx] = temp + '0';
+
+		idx = idx + 1;
+	} while (num > 0);
+
+	//Copy Hex values over to output string
+	for (stringidx = 2; stringidx < (idx + 2); stringidx++)
+		String[stringidx] = digit[idx - (stringidx - 1)];
+
+	//Add null termination to string
+	if(stringidx < MSZ_String)
+	{
+		String[stringidx] = 0;
+	}
+
+	return stringidx;
+}
+
+
+MX_SINT32 FCI_STRING_TO_INT(MX_STRING String, MX_UINT8 MSZ_String)
+
+{
+	MX_UINT8 bNegative = 0;
+0473  01BB  	CLRF FCI_STRING_0004F_1_bNegative
+
+	MX_UINT8 idx = 0;
+0474  01BC  	CLRF FCI_STRING_0004F_1_idx
+
+	MX_SINT32 RetVal = 0;
+0475  01BD  	CLRF FCI_STRING_0004F_1_RetVal
+0476  01BE  	CLRF FCI_STRING_0004F_1_RetVal+D'1'
+0477  01BF  	CLRF FCI_STRING_0004F_1_RetVal+D'2'
+0478  01C0  	CLRF FCI_STRING_0004F_1_RetVal+D'3'
+
+
+	//Is number negative
+	if(String[0] == '-')
+0479  1383  	BCF STATUS,IRP
+047A  1839  	BTFSC FCI_STRING_0004F_arg_String+D'1',0
+047B  1783  	BSF STATUS,IRP
+047C  0838  	MOVF FCI_STRING_0004F_arg_String, W
+047D  0084  	MOVWF FSR
+047E  01C1  	CLRF CompTempVar2065
+047F  0841  	MOVF CompTempVar2065, W
+0480  0784  	ADDWF FSR, F
+0481  0800  	MOVF INDF, W
+0482  3A2D  	XORLW 0x2D
+0483  1D03  	BTFSS STATUS,Z
+0484  2C88  	GOTO	label85
+0488        label85
+
+	{
+		bNegative = 1;
+0485  3001  	MOVLW 0x01
+0486  00BB  	MOVWF FCI_STRING_0004F_1_bNegative
+
+		idx = 1;
+0487  00BC  	MOVWF FCI_STRING_0004F_1_idx
+
+	}
+
+	//While string contains a valid number
+	while (idx < MSZ_String && String[idx] >= '0' && String[idx] <= '9')
+0488  083A  	MOVF FCI_STRING_0004F_arg_MSZ_String, W
+0489  023C  	SUBWF FCI_STRING_0004F_1_idx, W
+048A  1803  	BTFSC STATUS,C
+048B  2CE3  	GOTO	label86
+048C  1383  	BCF STATUS,IRP
+048D  1839  	BTFSC FCI_STRING_0004F_arg_String+D'1',0
+048E  1783  	BSF STATUS,IRP
+048F  0838  	MOVF FCI_STRING_0004F_arg_String, W
+0490  073C  	ADDWF FCI_STRING_0004F_1_idx, W
+0491  0084  	MOVWF FSR
+0492  3030  	MOVLW 0x30
+0493  0200  	SUBWF INDF, W
+0494  1C03  	BTFSS STATUS,C
+0495  2CE3  	GOTO	label86
+0496  1383  	BCF STATUS,IRP
+0497  1839  	BTFSC FCI_STRING_0004F_arg_String+D'1',0
+0498  1783  	BSF STATUS,IRP
+0499  0838  	MOVF FCI_STRING_0004F_arg_String, W
+049A  073C  	ADDWF FCI_STRING_0004F_1_idx, W
+049B  0084  	MOVWF FSR
+049C  0800  	MOVF INDF, W
+049D  3C39  	SUBLW 0x39
+049E  1C03  	BTFSS STATUS,C
+049F  2CE3  	GOTO	label86
+04E2  2C88  	GOTO	label85
+04E3        label86
+
+	{
+		//Pull MX_UINT8acter from string and add to running total
+		RetVal = (long) RetVal * 10;
+04A0  083D  	MOVF FCI_STRING_0004F_1_RetVal, W
+04A1  00C2  	MOVWF __mul_32u__0000F_arg_a
+04A2  083E  	MOVF FCI_STRING_0004F_1_RetVal+D'1', W
+04A3  00C3  	MOVWF __mul_32u__0000F_arg_a+D'1'
+04A4  083F  	MOVF FCI_STRING_0004F_1_RetVal+D'2', W
+04A5  00C4  	MOVWF __mul_32u__0000F_arg_a+D'2'
+04A6  0840  	MOVF FCI_STRING_0004F_1_RetVal+D'3', W
+04A7  00C5  	MOVWF __mul_32u__0000F_arg_a+D'3'
+04A8  300A  	MOVLW 0x0A
+04A9  00C6  	MOVWF __mul_32u__0000F_arg_b
+04AA  01C7  	CLRF __mul_32u__0000F_arg_b+D'1'
+04AB  01C8  	CLRF __mul_32u__0000F_arg_b+D'2'
+04AC  01C9  	CLRF __mul_32u__0000F_arg_b+D'3'
+04AD  2015  	CALL __mul_32u__0000F
+04AE  084F  	MOVF CompTempVarRet464, W
+04AF  00CA  	MOVWF CompTempVar2073
+04B0  0850  	MOVF CompTempVarRet464+D'1', W
+04B1  00CB  	MOVWF CompTempVar2074
+04B2  0851  	MOVF CompTempVarRet464+D'2', W
+04B3  00CC  	MOVWF CompTempVar2075
+04B4  0852  	MOVF CompTempVarRet464+D'3', W
+04B5  00CD  	MOVWF CompTempVar2076
+04B6  084A  	MOVF CompTempVar2073, W
+04B7  00BD  	MOVWF FCI_STRING_0004F_1_RetVal
+04B8  084B  	MOVF CompTempVar2074, W
+04B9  00BE  	MOVWF FCI_STRING_0004F_1_RetVal+D'1'
+04BA  084C  	MOVF CompTempVar2075, W
+04BB  00BF  	MOVWF FCI_STRING_0004F_1_RetVal+D'2'
+04BC  084D  	MOVF CompTempVar2076, W
+04BD  00C0  	MOVWF FCI_STRING_0004F_1_RetVal+D'3'
+
+		RetVal = (long) RetVal + (String[idx] - '0');
+04BE  1383  	BCF STATUS,IRP
+04BF  1839  	BTFSC FCI_STRING_0004F_arg_String+D'1',0
+04C0  1783  	BSF STATUS,IRP
+04C1  0838  	MOVF FCI_STRING_0004F_arg_String, W
+04C2  073C  	ADDWF FCI_STRING_0004F_1_idx, W
+04C3  0084  	MOVWF FSR
+04C4  3030  	MOVLW 0x30
+04C5  0200  	SUBWF INDF, W
+04C6  00C2  	MOVWF CompTempVar2079
+04C7  01C3  	CLRF CompTempVar2080
+04C8  01C4  	CLRF CompTempVar2081
+04C9  01C5  	CLRF CompTempVar2082
+04CA  083D  	MOVF FCI_STRING_0004F_1_RetVal, W
+04CB  07C2  	ADDWF CompTempVar2079, F
+04CC  083E  	MOVF FCI_STRING_0004F_1_RetVal+D'1', W
+04CD  1803  	BTFSC STATUS,C
+04CE  0F3E  	INCFSZ FCI_STRING_0004F_1_RetVal+D'1', W
+04CF  07C3  	ADDWF CompTempVar2080, F
+04D0  083F  	MOVF FCI_STRING_0004F_1_RetVal+D'2', W
+04D1  1803  	BTFSC STATUS,C
+04D2  0F3F  	INCFSZ FCI_STRING_0004F_1_RetVal+D'2', W
+04D3  07C4  	ADDWF CompTempVar2081, F
+04D4  0840  	MOVF FCI_STRING_0004F_1_RetVal+D'3', W
+04D5  1803  	BTFSC STATUS,C
+04D6  0F40  	INCFSZ FCI_STRING_0004F_1_RetVal+D'3', W
+04D7  07C5  	ADDWF CompTempVar2082, F
+04D8  0842  	MOVF CompTempVar2079, W
+04D9  00BD  	MOVWF FCI_STRING_0004F_1_RetVal
+04DA  0843  	MOVF CompTempVar2080, W
+04DB  00BE  	MOVWF FCI_STRING_0004F_1_RetVal+D'1'
+04DC  0844  	MOVF CompTempVar2081, W
+04DD  00BF  	MOVWF FCI_STRING_0004F_1_RetVal+D'2'
+04DE  0845  	MOVF CompTempVar2082, W
+04DF  00C0  	MOVWF FCI_STRING_0004F_1_RetVal+D'3'
+
+		idx = idx + 1;
+04E0  0A3C  	INCF FCI_STRING_0004F_1_idx, W
+04E1  00BC  	MOVWF FCI_STRING_0004F_1_idx
+
+	}
+
+	if (bNegative)
+04E3  08BB  	MOVF FCI_STRING_0004F_1_bNegative, F
+04E4  1903  	BTFSC STATUS,Z
+04E5  2D01  	GOTO	label87
+0501        label87
+
+		RetVal = (long) 0 - RetVal;
+04E6  083D  	MOVF FCI_STRING_0004F_1_RetVal, W
+04E7  3C00  	SUBLW 0x00
+04E8  00C2  	MOVWF CompTempVar2083
+04E9  3000  	MOVLW 0x00
+04EA  00C3  	MOVWF CompTempVar2084
+04EB  00C4  	MOVWF CompTempVar2085
+04EC  00C5  	MOVWF CompTempVar2086
+04ED  083E  	MOVF FCI_STRING_0004F_1_RetVal+D'1', W
+04EE  1C03  	BTFSS STATUS,C
+04EF  0F3E  	INCFSZ FCI_STRING_0004F_1_RetVal+D'1', W
+04F0  02C3  	SUBWF CompTempVar2084, F
+04F1  083F  	MOVF FCI_STRING_0004F_1_RetVal+D'2', W
+04F2  1C03  	BTFSS STATUS,C
+04F3  0F3F  	INCFSZ FCI_STRING_0004F_1_RetVal+D'2', W
+04F4  02C4  	SUBWF CompTempVar2085, F
+04F5  0840  	MOVF FCI_STRING_0004F_1_RetVal+D'3', W
+04F6  1C03  	BTFSS STATUS,C
+04F7  0F40  	INCFSZ FCI_STRING_0004F_1_RetVal+D'3', W
+04F8  02C5  	SUBWF CompTempVar2086, F
+04F9  0842  	MOVF CompTempVar2083, W
+04FA  00BD  	MOVWF FCI_STRING_0004F_1_RetVal
+04FB  0843  	MOVF CompTempVar2084, W
+04FC  00BE  	MOVWF FCI_STRING_0004F_1_RetVal+D'1'
+04FD  0844  	MOVF CompTempVar2085, W
+04FE  00BF  	MOVWF FCI_STRING_0004F_1_RetVal+D'2'
+04FF  0845  	MOVF CompTempVar2086, W
+0500  00C0  	MOVWF FCI_STRING_0004F_1_RetVal+D'3'
+
+
+	return RetVal;
+0501  083D  	MOVF FCI_STRING_0004F_1_RetVal, W
+0502  00C2  	MOVWF CompTempVarRet2063
+0503  083E  	MOVF FCI_STRING_0004F_1_RetVal+D'1', W
+0504  00C3  	MOVWF CompTempVarRet2063+D'1'
+0505  083F  	MOVF FCI_STRING_0004F_1_RetVal+D'2', W
+0506  00C4  	MOVWF CompTempVarRet2063+D'2'
+0507  0840  	MOVF FCI_STRING_0004F_1_RetVal+D'3', W
+0508  00C5  	MOVWF CompTempVarRet2063+D'3'
+
+}
+0509  0008  	RETURN
+
+
+
+MX_FLOAT FCI_STRING_TO_FLOAT(MX_STRING String, MX_UINT8 MSZ_String)
+{
+	MX_FLOAT RetVal = 0;
+	MX_FLOAT real_divider = 1;
+	MX_UINT32 whole, real;			//Changed from INT 23/07/10
+	MX_UINT8 idx = 0;
+	MX_UINT8 idx2 = 0;
+	MX_UINT8 offset = 0;
+	MX_UINT8 bNegative = 0;
+	MX_UINT8 Comp_String[8];
+
+	//Is number negative
+	if(String[0] == '-')
+	{
+		bNegative = 1;
+		offset = 1;
+	}
+
+	//Scan for decimal point
+	for(idx=offset; idx<MSZ_String; idx++)
+	{
+		if(String[idx] == '.')
+			break;
+	}
+
+	//Convert whole portion of number from string
+	whole = FCI_STRING_TO_INT (String, idx);
+
+	//No decimal point found
+	if(idx == MSZ_String)
+	{
+		#ifdef _BOOSTC
+			RetVal = float32_from_int32(whole);
+		#endif
+		#ifdef HI_TECH_C
+			RetVal = (int)whole;
+		#endif
+		return RetVal;
+	}
+
+	//Collect real portion of number into new string
+	offset = idx + 1;
+	for(idx=offset; idx<MSZ_String; idx++)
+	{
+		if(String[idx] >= '0' && String[idx] <= '9')
+		{
+			Comp_String[idx - offset] = String[idx];
+			#ifdef _BOOSTC
+				real_divider = float32_mul(real_divider, 0.1);
+			#endif
+			#ifdef HI_TECH_C
+				real_divider = real_divider * 0.1;
+			#endif
+		}
+		else
+			break;
+	}
+
+	//Convert real portion of number from string
+	real = FCI_STRING_TO_INT (Comp_String, (idx - offset));
+
+	//Adjust weighting of values and combine into one float variable
+	#ifdef _BOOSTC
+
+		RetVal = float32_from_int32(real);
+		RetVal = float32_mul(RetVal, real_divider);
+		real_divider = float32_from_int32(whole);
+		RetVal = float32_add(RetVal, real_divider);
+
+		if (bNegative)
+			RetVal = float32_sub(0, RetVal);
+
+	#endif
+	#ifdef HI_TECH_C
+
+		RetVal = (MX_FLOAT)real;
+		RetVal = RetVal * real_divider;
+		real_divider = (MX_FLOAT)whole;
+		RetVal = RetVal + real_divider;
+
+		if (bNegative)
+			RetVal = 0 - RetVal;
+	#endif
+
+	return RetVal;
+}
+
+
+
+/*=----------------------------------------------------------------------=*\
+   Use :Move but do not null-terminate sSrc to sDst, max len iSrc_len
+       :This differs from FCI_STRMOV() in that the bytes are copied from the
+       :end of the string to the start
+       :Returns length of copy
+\*=----------------------------------------------------------------------=*/
+MX_UINT8 FCI_STRREV(MX_STRING sSrc, MX_UINT8 iSrc_len, MX_STRING sDst, MX_UINT8 iDst_len)
+{
+  MX_UINT8 ix, len;
+  FCI_GETLENGTH__x(sSrc, iSrc_len, len);
+  if (len > iDst_len)
+  {
+    len = iDst_len;
+  }
+  ix = len;
+  while (ix > 0)
+  {
+    ix--;
+    sDst[ix] = sSrc[ix];
+  }
+  // No null terminate
+  // Return length of string
+  return len;
+}
+
+
+/*=----------------------------------------------------------------------=*\
+   Use :Move but do not null-terminate sSrc to sDst, max len iSrc_len
+       :Returns length of copy
+\*=----------------------------------------------------------------------=*/
+MX_UINT8 FCI_STRMOV(MX_STRING sSrc, MX_UINT8 iSrc_len, MX_STRING sDst, MX_UINT8 iDst_len)
+{
+  MX_UINT8 ix;
+  ix = 0;
+  while (ix < iSrc_len && ix < iDst_len && sSrc[ix] != '\0')
+  {
+    sDst[ix] = sSrc[ix];
+    ix++;
+  }
+  // No null terminate
+  // Return length of string
+  return ix;
+}
+
+/*=----------------------------------------------------------------------=*\
+   Use :Concatenate sDst = (sSrc1 + sSrc2)
+       :sDst is only null terminated if the concat doesnt overflow
+       :
+\*=----------------------------------------------------------------------=*/
+void FCI_SHEAD(MX_STRING sSrc1, MX_UINT8 iSrc1_len, MX_STRING sSrc2, MX_UINT8 iSrc2_len, MX_STRING sDst, MX_UINT8 iDst_len)
+{
+  MX_UINT8 len, strt;
+
+  len = 0;
+  if (sSrc2 == sDst)
+  {
+    FCI_GETLENGTH__x(sSrc1, iSrc1_len, strt);
+    if (strt < iDst_len)
+    {
+      // Copy second, in reverse
+      // len = FCI_STRREV(sSrc2, iSrc2_len, sDst + strt, iDst_len - strt);
+      FCI_GETLENGTH__x(sSrc2, iSrc2_len, len);
+      if (len > (iDst_len - strt))
+      {
+        len = (iDst_len - strt); // Length of string to copy to
+      }
+      iSrc2_len = strt + len; // Use no longer needed var as an offset
+      strt = len;
+      while (strt > 0)
+      {
+        strt--;
+        iSrc2_len--;
+        sDst[iSrc2_len] = sSrc2[strt];
+      }
+      // Move first
+      FCI_STRMOV__x(sSrc1, iSrc1_len, sDst, iDst_len, strt);
+      len += strt;
+    }
+    else
+    {
+      // Copy first
+      FCI_STRMOV__x(sSrc1, iSrc1_len, sDst, iDst_len, len);
+    }
+  }
+  else
+  {
+    // Copy first
+    FCI_STRMOV__x(sSrc1, iSrc1_len, sDst, iDst_len, len);
+    // Copy second
+    if (len < iDst_len)
+    {
+      sSrc1 = sDst + len; // make temp copies in no longer used variables
+      iSrc1_len = iDst_len - len;
+      FCI_STRMOV__x(sSrc2, iSrc2_len, sSrc1, iSrc1_len, strt);
+      len += strt;
+    }
+  }
+  // Terminate (only if can)
+  if (len < iDst_len)
+  {
+    sDst[len] = '\0';
+  }
+}
+
+
+/*=----------------------------------------------------------------------=*\
+   Use :Copy and null-terminate sSrc to sDst, max len iSrc_len
+       :sDst is only null terminated if the concat doesnt overflow
+       :
+\*=----------------------------------------------------------------------=*/
+void FCI_SCOPY(MX_STRING sSrc, MX_UINT8 iSrc_len, MX_STRING sDst, MX_UINT8 iDst_len)
+{
+  MX_UINT8 len;
+
+  // Move first
+  FCI_STRMOV__x(sSrc, iSrc_len, sDst, iDst_len, len);
+  // Terminate (only if can)
+  if (len < iDst_len)
+  {
+    sDst[len] = '\0';
+  }
+}
+
+
+
+
+//************************************************************************************
+//**  
+//**  File name:     D:\KennyNeutronsInnovations\MasterGio\final_program_FCF\ScoreBoard887.c
+//**  Title:         
+//**  Description:   
+//**  
+//**  Generated by:  Flowcode v5.2.0.0
+//**  Date:          Tuesday, March 12, 2019 09:55:15
+//**  Licence:       Professional
+//**  Registered to: xyz
+//**  Licence key:   WUK7B9
+//**  
+//**  
+//**  http://www.matrixmultimedia.com
+//**  
+//************************************************************************************
+
+
+#define MX_PIC
+
+#define MX_USES_UINT8 1
+#define MX_USES_SINT16 0
+#define MX_USES_CHAR 2
+#define MX_USES_FLOAT 0
+#define MX_USES_SINT32 0
+#define MX_USES_BOOL 1
+#define MX_USES_UINT16 0
+#define MX_USES_UINT32 1
+//Defines for microcontroller
+#define P16F887
+#define FC_CAL_PIC
+#define MX_ADC
+#define MX_ADC_TYPE_7
+#define MX_ADC_BITS_10
+#define MX_EE
+#define MX_EE_TYPE2
+#define MX_EE_SIZE 256
+#define MX_SPI_1
+#define MX_SPI_1_MISO_PORT portc
+#define MX_SPI_1_MISO_TRIS trisc
+#define MX_SPI_1_MISO_PIN 4
+#define MX_SPI_1_MOSI_PORT portc
+#define MX_SPI_1_MOSI_TRIS trisc
+#define MX_SPI_1_MOSI_PIN 5
+#define MX_SPI_1_CLK_PORT portc
+#define MX_SPI_1_CLK_TRIS trisc
+#define MX_SPI_1_CLK_PIN 3
+#define MX_SPI_1_SS_PORT portc
+#define MX_SPI_1_SS_TRIS trisc
+#define MX_UART_1
+#define MX_UART_1_TX_PORT portc
+#define MX_UART_1_TX_TRIS trisc
+#define MX_UART_1_TX_PIN 6
+#define MX_UART_1_RX_PORT portc
+#define MX_UART_1_RX_TRIS trisc
+#define MX_UART_1_RX_PIN 7
+#define MX_I2C
+#define MX_MI2C
+#define MX_I2C_1
+#define MX_I2C_1_SDA_PORT portc
+#define MX_I2C_1_SDA_TRIS trisc
+#define MX_I2C_1_SDA_PIN 4
+#define MX_I2C_1_SCL_PORT portc
+#define MX_I2C_1_SCL_TRIS trisc
+#define MX_I2C_1_SCL_PIN 3
+#define MX_PWM
+#define MX_PWM_CNT 2
+#define MX_PWM_PSCA1
+#define MX_PWM_PSCA4
+#define MX_PWM_PSCA16
+#define MX_PWM_1_PORT portc
+#define MX_PWM_1_TRIS trisc
+#define MX_PWM_1_PIN 2
+#define MX_PWM_2_PORT portc
+#define MX_PWM_2_TRIS trisc
+#define MX_PWM_2_PIN 1
+
+//Functions
+#define MX_CLK_SPEED 20000000
+#ifdef _BOOSTC
+#include <system.h>
+#endif
+#ifdef HI_TECH_C
+#include <pic.h>
+#endif
+
+//Configuration data
+#ifdef _BOOSTC
+#pragma DATA 0x2007, 0x20d2
+#endif
+#ifdef HI_TECH_C
+__CONFIG(0x20d2);
+#endif
+#ifdef _BOOSTC
+#pragma DATA 0x2008, 0x3fff
+#endif
+#ifdef HI_TECH_C
+__CONFIG(0x3fff);
+#endif
+
+//Internal functions
+#include "C:\Program Files (x86)\Flowcode\v5\FCD\internals.c"
+
+//Macro function declarations
+void FCM_data_bank();
+void FCM_register();
+void FCM_test_macro();
+
+
+//Variable declarations
+#define FCSZ_STRING_AWAY 3
+#define FCSZ_END 2
+#define FCSZ_STRING_TIME 4
+#define FCSZ_STRING_FOPE 3
+#define FCSZ_STRING_HOME 3
+#define FCSZ_RCV 15
+#define FCSZ_RCV 15
+#define FCV_FALSE (0)
+#define FCV_TRUE (1)
+MX_UINT8 FCV_DIGIT_FOPE = (0x0);
+0812  01F8  	CLRF gbl_FCV_DIGIT_FOPE
+
+MX_UINT8 FCV_DIGIT_TIME;
+MX_UINT32 FCV_STORED_HOME_SCORE = (0x0);
+0813  01C3  	CLRF gbl_FCV_STORED_HOME_SCORE
+0814  01C4  	CLRF gbl_FCV_STORED_HOME_SCORE+D'1'
+0815  01C5  	CLRF gbl_FCV_STORED_HOME_SCORE+D'2'
+0816  01C6  	CLRF gbl_FCV_STORED_HOME_SCORE+D'3'
+
+MX_UINT8 FCV_STORED_SEC = (0x0);
+0817  01FA  	CLRF gbl_FCV_STORED_SEC
+
+MX_UINT8 FCV_HOME_SCORE_ONES;
+MX_BOOL FCV_DAT_SCORE;
+MX_UINT8 FCV_STORED_MIN = (0x0);
+0818  01FD  	CLRF gbl_FCV_STORED_MIN
+
+MX_UINT8 FCV_PERIOD;
+MX_UINT8 FCV_BITS_SCORE = (0x0);
+0819  1683  	BSF STATUS, RP0
+081A  01A0  	CLRF gbl_FCV_BITS_SCORE
+
+MX_UINT8 FCV_AWAY_SCORE_TENS = (0x0);
+081B  01A1  	CLRF gbl_FCV_AWAY_SCORE_TENS
+
+MX_UINT8 FCV_STORED_HOME_FOUL = (0x0);
+081C  01A2  	CLRF gbl_FCV_STORED_HOME_FOUL
+
+MX_UINT8 FCV_HOME_FOUL = (0x0);
+081D  01A3  	CLRF gbl_FCV_HOME_FOUL
+
+MX_UINT8 FCV_MIN_ONES = (0x0);
+081E  01A4  	CLRF gbl_FCV_MIN_ONES
+
+MX_UINT8 FCV_STORED_PERIOD = (0x0);
+081F  01A5  	CLRF gbl_FCV_STORED_PERIOD
+
+MX_UINT8 FCV_RX;
+MX_CHAR FCV_STRING_AWAY[FCSZ_STRING_AWAY] = ("");
+0820  1283  	BCF STATUS, RP0
+0821  01DF  	CLRF gbl_FCV_STRING_AWAY
+
+MX_CHAR FCV_END[FCSZ_END] = ("");
+0822  01ED  	CLRF gbl_FCV_END
+
+MX_UINT32 FCV_AWAY_SCORE = (0x0);
+0823  01C7  	CLRF gbl_FCV_AWAY_SCORE
+0824  01C8  	CLRF gbl_FCV_AWAY_SCORE+D'1'
+0825  01C9  	CLRF gbl_FCV_AWAY_SCORE+D'2'
+0826  01CA  	CLRF gbl_FCV_AWAY_SCORE+D'3'
+
+MX_BOOL FCV_DAT_FOPE = (0);
+0827  10FC  	BCF gbl_FCV_DAT_FOPE,1
+
+MX_BOOL FCV_DAT_TIME = (0);
+0828  117C  	BCF gbl_FCV_DAT_TIME,2
+
+MX_UINT8 FCV_DIGIT = (0x0);
+0829  1683  	BSF STATUS, RP0
+082A  01A7  	CLRF gbl_FCV_DIGIT
+
+MX_CHAR FCV_STRING_TIME[FCSZ_STRING_TIME] = ("");
+082B  1283  	BCF STATUS, RP0
+082C  01CB  	CLRF gbl_FCV_STRING_TIME
+
+MX_UINT8 FCV_SEC_TENS;
+MX_UINT8 FCV_AWAY_SCORE_ONES = (0x0);
+082D  1683  	BSF STATUS, RP0
+082E  01A9  	CLRF gbl_FCV_AWAY_SCORE_ONES
+
+MX_CHAR FCV_STRING_FOPE[FCSZ_STRING_FOPE] = ("");
+082F  1283  	BCF STATUS, RP0
+0830  01E2  	CLRF gbl_FCV_STRING_FOPE
+
+MX_CHAR FCV_STRING_HOME[FCSZ_STRING_HOME] = ("");
+0831  01E5  	CLRF gbl_FCV_STRING_HOME
+
+MX_UINT32 FCV_HOME_SCORE;
+MX_UINT8 FCV_DIGIT_SCORE = (0x0);
+0832  1683  	BSF STATUS, RP0
+0833  01AA  	CLRF gbl_FCV_DIGIT_SCORE
+
+MX_UINT8 FCV_HOME_SCORE_TENS;
+MX_UINT8 FCV_BITS_FOPE = (0x0);
+0834  01AC  	CLRF gbl_FCV_BITS_FOPE
+
+MX_UINT8 FCV_BITS_TIME = (0x0);
+0835  01AD  	CLRF gbl_FCV_BITS_TIME
+
+MX_UINT8 FCV_SEC;
+MX_UINT8 FCV_MIN = (0x0);
+0836  01AF  	CLRF gbl_FCV_MIN
+
+MX_UINT32 FCV_STORED_AWAY_SCORE = (0x0);
+0837  1283  	BCF STATUS, RP0
+0838  01D3  	CLRF gbl_FCV_STORED_AWAY_SCORE
+0839  01D4  	CLRF gbl_FCV_STORED_AWAY_SCORE+D'1'
+083A  01D5  	CLRF gbl_FCV_STORED_AWAY_SCORE+D'2'
+083B  01D6  	CLRF gbl_FCV_STORED_AWAY_SCORE+D'3'
+
+MX_UINT8 FCV_STORED_AWAY_FOUL = (0x0);
+083C  1683  	BSF STATUS, RP0
+083D  01B0  	CLRF gbl_FCV_STORED_AWAY_FOUL
+
+MX_UINT32 FCV_FOPE;
+MX_UINT32 FCV_TIME = (0x0);
+083E  1283  	BCF STATUS, RP0
+083F  01DB  	CLRF gbl_FCV_TIME
+0840  01DC  	CLRF gbl_FCV_TIME+D'1'
+0841  01DD  	CLRF gbl_FCV_TIME+D'2'
+0842  01DE  	CLRF gbl_FCV_TIME+D'3'
+
+MX_UINT8 FCV_AWAY_FOUL = (0x0);
+0843  1683  	BSF STATUS, RP0
+0844  01B1  	CLRF gbl_FCV_AWAY_FOUL
+
+MX_UINT8 FCV_SEC_ONES;
+MX_UINT8 FCV_MIN_TENS = (0x0);
+0845  01B3  	CLRF gbl_FCV_MIN_TENS
+
+MX_CHAR FCV_RCV[FCSZ_RCV] = ("");
+0846  1283  	BCF STATUS, RP0
+0847  01A0  	CLRF gbl_FCV_RCV
+
+
+MX_UINT8 FCLV_LOOP1;
+MX_UINT8 FCLV_LOOP2;
+MX_UINT8 FCLV_LOOP3;
+MX_UINT8 FCLV_LOOP4;
+MX_UINT8 FCLV_LOOP5;
+MX_UINT8 FCLV_LOOP6;
+MX_UINT8 FCLV_LOOP7;
+MX_UINT8 FCLV_LOOP8;
+
+
+
+//RS232(0): //Defines:
+
+/**** Macro Substitutions ****
+a = Unique Reference
+b = Uart Channel		(0-software / 1-4 hardware)
+c = tx pin
+d = tx port
+e = rx pin
+f = rx port
+g = flow control		(0-Off / 1-On)
+h = cts pin
+i = cts port
+j = rts pin
+k = rts port
+l = baud rate
+m = data bits			(7/8/9) (7 only supported in software modes)
+n = return type		(0-byte / 1-MX_UINT16)
+o = echo enable		(0-Off / 1-On)
+******************************/
+
+//Definitions for RS232 UART slot allocation
+#ifndef	MX_UART_REF1
+	#define MX_UART_REF1
+	#define RS232_1_MX_UART_UREF			1
+	#define MX_UART_CHANNEL_1		1
+	#define MX_UART_TX_PIN_1		0
+	#define MX_UART_TX_PORT_1		porta
+	#define MX_UART_TX_TRIS_1		trisa
+	#define MX_UART_RX_PIN_1		0
+	#define MX_UART_RX_PORT_1		porta
+	#define MX_UART_RX_TRIS_1		trisa
+	#define MX_UART_FLOWEN_1		0
+	#define MX_UART_CTS_PIN_1		4
+	#define MX_UART_CTS_PORT_1		portc
+	#define MX_UART_CTS_TRIS_1		trisc
+	#define MX_UART_RTS_PIN_1		0
+	#define MX_UART_RTS_PORT_1		portc
+	#define MX_UART_RTS_TRIS_1		trisc
+	#define MX_UART_BAUD_1			38400
+	#define MX_UART_DBITS_1			8
+	#define MX_UART_RETURN_1		0
+	#define MX_UART_ECHO_1			0
+	#define MX_UART_INT_1			0
+#else
+ #ifndef	MX_UART_REF2
+	#define MX_UART_REF2
+	#define RS232_1_MX_UART_UREF			2
+	#define MX_UART_CHANNEL_2		1
+	#define MX_UART_TX_PIN_2		0
+	#define MX_UART_TX_PORT_2		porta
+	#define MX_UART_TX_TRIS_2		trisa
+	#define MX_UART_RX_PIN_2		0
+	#define MX_UART_RX_PORT_2		porta
+	#define MX_UART_RX_TRIS_2		trisa
+	#define MX_UART_FLOWEN_2		0
+	#define MX_UART_CTS_PIN_2		4
+	#define MX_UART_CTS_PORT_2		portc
+	#define MX_UART_CTS_TRIS_2		trisc
+	#define MX_UART_RTS_PIN_2		0
+	#define MX_UART_RTS_PORT_2		portc
+	#define MX_UART_RTS_TRIS_2		trisc
+	#define MX_UART_BAUD_2			38400
+	#define MX_UART_DBITS_2			8
+	#define MX_UART_RETURN_2		0
+	#define MX_UART_ECHO_2			0
+	#define MX_UART_INT_2			0
+ #else
+  #ifndef	MX_UART_REF3
+	#define MX_UART_REF3
+	#define RS232_1_MX_UART_UREF			3
+	#define MX_UART_CHANNEL_3		1
+	#define MX_UART_TX_PIN_3		0
+	#define MX_UART_TX_PORT_3		porta
+	#define MX_UART_TX_TRIS_3		trisa
+	#define MX_UART_RX_PIN_3		0
+	#define MX_UART_RX_PORT_3		porta
+	#define MX_UART_RX_TRIS_3		trisa
+	#define MX_UART_FLOWEN_3		0
+	#define MX_UART_CTS_PIN_3		4
+	#define MX_UART_CTS_PORT_3		portc
+	#define MX_UART_CTS_TRIS_3		trisc
+	#define MX_UART_RTS_PIN_3		0
+	#define MX_UART_RTS_PORT_3		portc
+	#define MX_UART_RTS_TRIS_3		trisc
+	#define MX_UART_BAUD_3			38400
+	#define MX_UART_DBITS_3			8
+	#define MX_UART_RETURN_3		0
+	#define MX_UART_ECHO_3			0
+	#define MX_UART_INT_3			0
+  #else
+   #ifndef	MX_UART_REF4
+	#define MX_UART_REF4
+	#define RS232_1_MX_UART_UREF			4
+	#define MX_UART_CHANNEL_4		1
+	#define MX_UART_TX_PIN_4		0
+	#define MX_UART_TX_PORT_4		porta
+	#define MX_UART_TX_TRIS_4		trisa
+	#define MX_UART_RX_PIN_4		0
+	#define MX_UART_RX_PORT_4		porta
+	#define MX_UART_RX_TRIS_4		trisa
+	#define MX_UART_FLOWEN_4		0
+	#define MX_UART_CTS_PIN_4		4
+	#define MX_UART_CTS_PORT_4		portc
+	#define MX_UART_CTS_TRIS_4		trisc
+	#define MX_UART_RTS_PIN_4		0
+	#define MX_UART_RTS_PORT_4		portc
+	#define MX_UART_RTS_TRIS_4		trisc
+	#define MX_UART_BAUD_4			38400
+	#define MX_UART_DBITS_4			8
+	#define MX_UART_RETURN_4		0
+	#define MX_UART_ECHO_4			0
+	#define MX_UART_INT_4			0
+   #endif
+  #endif
+ #endif
+#endif
+
+#define RS232_1_UART_Init		CAL_APPEND(FC_CAL_UART_Init_, RS232_1_MX_UART_UREF)
+#define RS232_1_UART_Send		CAL_APPEND(FC_CAL_UART_Send_, RS232_1_MX_UART_UREF)
+#define RS232_1_UART_Receive		CAL_APPEND(FC_CAL_UART_Receive_, RS232_1_MX_UART_UREF)
+#define RS232_1_UART_Update_Baud CAL_APPEND(FC_CAL_UART_Update_Baud_, RS232_1_MX_UART_UREF)
+
+extern void RS232_1_UART_Init();
+extern void RS232_1_UART_Send(MX_UINT16 nChar);
+extern MX_SINT16 RS232_1_UART_Receive(MX_UINT8 nTimeout);
+extern void RS232_1_UART_Update_Baud(MX_UINT8 newbaud);
+
+
+
+
+//RS232(0): //Macro function declarations
+
+void FCD_RS2320_SendRS232Char(MX_SINT16 nChar);
+void FCD_RS2320_SendRS232String(MX_STRING String, MX_UINT8 MSZ_String);
+MX_SINT16 FCD_RS2320_ReceiveRS232Char(MX_UINT8 nTimeout);
+void FCD_RS2320_ReceiveRS232String(MX_CHAR* FCR_RETVAL, MX_UINT8 FCR_RETVAL_SIZE, MX_UINT8 nTimeout, MX_UINT8 NumBytes);
+void FCD_RS2320_ChangeHWBaud(MX_UINT8 newbaud);
+
+
+
+//RS232(0): //Macro implementations
+
+
+void FCD_RS2320_SendRS232Char(MX_SINT16 nChar)
+{
+	
+		RS232_1_UART_Send ( nChar);
+
+}
+
+void FCD_RS2320_SendRS232String(MX_STRING String, MX_UINT8 MSZ_String)
+{
+	
+		MX_UINT8 idx;
+		for(idx = 0; idx < MSZ_String; idx++)
+		{
+			if (String[idx] == 0)
+				break;
+			else RS232_1_UART_Send ( String[idx] );
+		}
+
+}
+
+MX_SINT16 FCD_RS2320_ReceiveRS232Char(MX_UINT8 nTimeout)
+
+{
+	
+		return ( RS232_1_UART_Receive ( nTimeout) );
+0595  0838  	MOVF FCD_RS2320_0005B_arg_nTimeout, W
+0596  00C2  	MOVWF FC_CAL_UAR_00056_arg_nTimeout
+0597  2038  	CALL FC_CAL_UAR_00056
+0598  0849  	MOVF CompTempVarRet2293, W
+0599  00BA  	MOVWF CompTempVarRet2298
+059A  084A  	MOVF CompTempVarRet2293+D'1', W
+059B  00BB  	MOVWF CompTempVarRet2298+D'1'
+
+
+}
+059C  0008  	RETURN
+
+
+void FCD_RS2320_ReceiveRS232String(MX_CHAR* FCR_RETVAL, MX_UINT8 FCR_RETVAL_SIZE, MX_UINT8 nTimeout, MX_UINT8 NumBytes)
+
+{
+	
+		MX_UINT8 idx;
+		MX_SINT16 RS232_TO = 255;
+055B  30FF  	MOVLW 0xFF
+055C  00BE  	MOVWF FCD_RS2320_0005C_1_RS232_TO
+055D  01BF  	CLRF FCD_RS2320_0005C_1_RS232_TO+D'1'
+
+		MX_SINT16 in;
+
+		if ( 0 != 0 )
+			RS232_TO = 256;
+
+		if (NumBytes > FCR_RETVAL_SIZE)
+055E  083C  	MOVF FCD_RS2320_0005C_arg_NumBytes, W
+055F  023A  	SUBWF FCD_RS2320_0005C_arg_FCR_R_0005D, W
+0560  1803  	BTFSC STATUS,C
+0561  2D64  	GOTO	label96
+0564        label96
+
+			NumBytes = FCR_RETVAL_SIZE;
+0562  083A  	MOVF FCD_RS2320_0005C_arg_FCR_R_0005D, W
+0563  00BC  	MOVWF FCD_RS2320_0005C_arg_NumBytes
+
+
+		for (idx = 0; idx < NumBytes; idx++)
+0564  01BD  	CLRF FCD_RS2320_0005C_1_idx
+0565        label97
+0565  083C  	MOVF FCD_RS2320_0005C_arg_NumBytes, W
+0566  023D  	SUBWF FCD_RS2320_0005C_1_idx, W
+0567  1803  	BTFSC STATUS,C
+0568  2D88  	GOTO	label99
+0586  0ABD  	INCF FCD_RS2320_0005C_1_idx, F
+0587  2D65  	GOTO	label97
+0588        label99
+
+		{
+			in = RS232_1_UART_Receive ( nTimeout);
+0569  083B  	MOVF FCD_RS2320_0005C_arg_nTimeout, W
+056A  00C2  	MOVWF FC_CAL_UAR_00056_arg_nTimeout
+056B  2038  	CALL FC_CAL_UAR_00056
+056C  0849  	MOVF CompTempVarRet2293, W
+056D  00C0  	MOVWF FCD_RS2320_0005C_1_in
+056E  084A  	MOVF CompTempVarRet2293+D'1', W
+056F  00C1  	MOVWF FCD_RS2320_0005C_1_in+D'1'
+
+			if(in < RS232_TO)
+0570  0841  	MOVF FCD_RS2320_0005C_1_in+D'1', W
+0571  3A80  	XORLW 0x80
+0572  00C2  	MOVWF CompTempVar2299
+0573  083F  	MOVF FCD_RS2320_0005C_1_RS232_TO+D'1', W
+0574  3A80  	XORLW 0x80
+0575  0242  	SUBWF CompTempVar2299, W
+0576  1D03  	BTFSS STATUS,Z
+0577  2D7A  	GOTO	label98
+0578  083E  	MOVF FCD_RS2320_0005C_1_RS232_TO, W
+0579  0240  	SUBWF FCD_RS2320_0005C_1_in, W
+057A        label98
+057A  1803  	BTFSC STATUS,C
+057B  2D88  	GOTO	label99
+
+				FCR_RETVAL[idx] = in & 0xFF;
+057C  0840  	MOVF FCD_RS2320_0005C_1_in, W
+057D  00C2  	MOVWF CompTempVar2301
+057E  1383  	BCF STATUS,IRP
+057F  1839  	BTFSC FCD_RS2320_0005C_arg_FCR_RETVAL+D'1',0
+0580  1783  	BSF STATUS,IRP
+0581  0838  	MOVF FCD_RS2320_0005C_arg_FCR_RETVAL, W
+0582  073D  	ADDWF FCD_RS2320_0005C_1_idx, W
+0583  0084  	MOVWF FSR
+0584  0842  	MOVF CompTempVar2301, W
+0585  0080  	MOVWF INDF
+
+			else
+				break;
+
+		}
+
+		if (idx < FCR_RETVAL_SIZE)
+0588  083A  	MOVF FCD_RS2320_0005C_arg_FCR_R_0005D, W
+0589  023D  	SUBWF FCD_RS2320_0005C_1_idx, W
+058A  1803  	BTFSC STATUS,C
+
+			FCR_RETVAL[idx] = 0;
+058C  1383  	BCF STATUS,IRP
+058D  1839  	BTFSC FCD_RS2320_0005C_arg_FCR_RETVAL+D'1',0
+058E  1783  	BSF STATUS,IRP
+058F  0838  	MOVF FCD_RS2320_0005C_arg_FCR_RETVAL, W
+0590  073D  	ADDWF FCD_RS2320_0005C_1_idx, W
+0591  0084  	MOVWF FSR
+0592  3000  	MOVLW 0x00
+0593  0080  	MOVWF INDF
+
+
+}
+058B  0008  	RETURN
+0594  0008  	RETURN
+
+
+void FCD_RS2320_ChangeHWBaud(MX_UINT8 newbaud)
+{
+	
+		RS232_1_UART_Update_Baud (newbaud);
+
+}
+
+#include "C:\Program Files (x86)\Flowcode\v5\CAL\includes.c"
+
+//Macro implementations
+
+
+void FCM_data_bank()
+
+{
+
+	//Switch
+	//Switch: digit_time?
+	switch (FCV_DIGIT_TIME)
+00AF  28E1  	GOTO	label21
+
+	{
+		case 1:
+0090  0879  	MOVF gbl_FCV_DIGIT_TIME, W
+0091  3A01  	XORLW 0x01
+0092  1903  	BTFSC STATUS,Z
+0093  28B0  	GOTO	label11
+00B0        label11
+00E1        label21
+0132        label32
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_time = 0b00000110
+			FCV_BITS_TIME = 6;
+00B0  3006  	MOVLW 0x06
+00B1  1683  	BSF STATUS, RP0
+00B2  1303  	BCF STATUS, RP1
+00B3  00AD  	MOVWF gbl_FCV_BITS_TIME
+
+
+			break;
+00B4  28E1  	GOTO	label21
+
+		}
+		case 2:
+0094  3A03  	XORLW 0x03
+0095  1903  	BTFSC STATUS,Z
+0096  28B5  	GOTO	label12
+00B5        label12
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_time = 0b01011011
+			FCV_BITS_TIME = 91;
+00B5  305B  	MOVLW 0x5B
+00B6  1683  	BSF STATUS, RP0
+00B7  1303  	BCF STATUS, RP1
+00B8  00AD  	MOVWF gbl_FCV_BITS_TIME
+
+
+			break;
+00B9  28E1  	GOTO	label21
+
+		}
+		case 3:
+0097  3A01  	XORLW 0x01
+0098  1903  	BTFSC STATUS,Z
+0099  28BA  	GOTO	label13
+00BA        label13
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_time = 0b01001111
+			FCV_BITS_TIME = 79;
+00BA  304F  	MOVLW 0x4F
+00BB  1683  	BSF STATUS, RP0
+00BC  1303  	BCF STATUS, RP1
+00BD  00AD  	MOVWF gbl_FCV_BITS_TIME
+
+
+			break;
+00BE  28E1  	GOTO	label21
+
+		}
+		case 4:
+009A  3A07  	XORLW 0x07
+009B  1903  	BTFSC STATUS,Z
+009C  28BF  	GOTO	label14
+00BF        label14
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_time = 0b01100110
+			FCV_BITS_TIME = 102;
+00BF  3066  	MOVLW 0x66
+00C0  1683  	BSF STATUS, RP0
+00C1  1303  	BCF STATUS, RP1
+00C2  00AD  	MOVWF gbl_FCV_BITS_TIME
+
+
+			break;
+00C3  28E1  	GOTO	label21
+
+		}
+		case 5:
+009D  3A01  	XORLW 0x01
+009E  1903  	BTFSC STATUS,Z
+009F  28C4  	GOTO	label15
+00C4        label15
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_time = 0b01101101
+			FCV_BITS_TIME = 109;
+00C4  306D  	MOVLW 0x6D
+00C5  1683  	BSF STATUS, RP0
+00C6  1303  	BCF STATUS, RP1
+00C7  00AD  	MOVWF gbl_FCV_BITS_TIME
+
+
+			break;
+00C8  28E1  	GOTO	label21
+
+		}
+		case 6:
+00A0  3A03  	XORLW 0x03
+00A1  1903  	BTFSC STATUS,Z
+00A2  28C9  	GOTO	label16
+00C9        label16
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_time = 0b01111101
+			FCV_BITS_TIME = 125;
+00C9  307D  	MOVLW 0x7D
+00CA  1683  	BSF STATUS, RP0
+00CB  1303  	BCF STATUS, RP1
+00CC  00AD  	MOVWF gbl_FCV_BITS_TIME
+
+
+			break;
+00CD  28E1  	GOTO	label21
+
+		}
+		case 7:
+00A3  3A01  	XORLW 0x01
+00A4  1903  	BTFSC STATUS,Z
+00A5  28CE  	GOTO	label17
+00CE        label17
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_time = 0b00000111
+			FCV_BITS_TIME = 7;
+00CE  3007  	MOVLW 0x07
+00CF  1683  	BSF STATUS, RP0
+00D0  1303  	BCF STATUS, RP1
+00D1  00AD  	MOVWF gbl_FCV_BITS_TIME
+
+
+			break;
+00D2  28E1  	GOTO	label21
+
+		}
+		case 8:
+00A6  3A0F  	XORLW 0x0F
+00A7  1903  	BTFSC STATUS,Z
+00A8  28D3  	GOTO	label18
+00D3        label18
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_time = 0b01111111
+			FCV_BITS_TIME = 127;
+00D3  307F  	MOVLW 0x7F
+00D4  1683  	BSF STATUS, RP0
+00D5  1303  	BCF STATUS, RP1
+00D6  00AD  	MOVWF gbl_FCV_BITS_TIME
+
+
+			break;
+00D7  28E1  	GOTO	label21
+
+		}
+		case 9:
+00A9  3A01  	XORLW 0x01
+00AA  1903  	BTFSC STATUS,Z
+00AB  28D8  	GOTO	label19
+00D8        label19
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_time = 0b01101111
+			FCV_BITS_TIME = 111;
+00D8  306F  	MOVLW 0x6F
+00D9  1683  	BSF STATUS, RP0
+00DA  1303  	BCF STATUS, RP1
+00DB  00AD  	MOVWF gbl_FCV_BITS_TIME
+
+
+			break;
+00DC  28E1  	GOTO	label21
+
+		}
+		case 0:
+00AC  3A09  	XORLW 0x09
+00AD  1903  	BTFSC STATUS,Z
+00AE  28DD  	GOTO	label20
+00DD        label20
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_time = 0b00111111
+			FCV_BITS_TIME = 63;
+00DD  303F  	MOVLW 0x3F
+00DE  1683  	BSF STATUS, RP0
+00DF  1303  	BCF STATUS, RP1
+00E0  00AD  	MOVWF gbl_FCV_BITS_TIME
+
+
+			break;
+
+		}
+		// default:
+
+	}
+
+	//Switch
+	//Switch: digit_fope?
+	switch (FCV_DIGIT_FOPE)
+0100  2932  	GOTO	label32
+
+	{
+		case 1:
+00E1  0878  	MOVF gbl_FCV_DIGIT_FOPE, W
+00E2  3A01  	XORLW 0x01
+00E3  1903  	BTFSC STATUS,Z
+00E4  2901  	GOTO	label22
+0101        label22
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_fope = 0b00000110
+			FCV_BITS_FOPE = 6;
+0101  3006  	MOVLW 0x06
+0102  1683  	BSF STATUS, RP0
+0103  1303  	BCF STATUS, RP1
+0104  00AC  	MOVWF gbl_FCV_BITS_FOPE
+
+
+			break;
+0105  2932  	GOTO	label32
+
+		}
+		case 2:
+00E5  3A03  	XORLW 0x03
+00E6  1903  	BTFSC STATUS,Z
+00E7  2906  	GOTO	label23
+0106        label23
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_fope = 0b01011011
+			FCV_BITS_FOPE = 91;
+0106  305B  	MOVLW 0x5B
+0107  1683  	BSF STATUS, RP0
+0108  1303  	BCF STATUS, RP1
+0109  00AC  	MOVWF gbl_FCV_BITS_FOPE
+
+
+			break;
+010A  2932  	GOTO	label32
+
+		}
+		case 3:
+00E8  3A01  	XORLW 0x01
+00E9  1903  	BTFSC STATUS,Z
+00EA  290B  	GOTO	label24
+010B        label24
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_fope = 0b01001111
+			FCV_BITS_FOPE = 79;
+010B  304F  	MOVLW 0x4F
+010C  1683  	BSF STATUS, RP0
+010D  1303  	BCF STATUS, RP1
+010E  00AC  	MOVWF gbl_FCV_BITS_FOPE
+
+
+			break;
+010F  2932  	GOTO	label32
+
+		}
+		case 4:
+00EB  3A07  	XORLW 0x07
+00EC  1903  	BTFSC STATUS,Z
+00ED  2910  	GOTO	label25
+0110        label25
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_fope = 0b01100110
+			FCV_BITS_FOPE = 102;
+0110  3066  	MOVLW 0x66
+0111  1683  	BSF STATUS, RP0
+0112  1303  	BCF STATUS, RP1
+0113  00AC  	MOVWF gbl_FCV_BITS_FOPE
+
+
+			break;
+0114  2932  	GOTO	label32
+
+		}
+		case 5:
+00EE  3A01  	XORLW 0x01
+00EF  1903  	BTFSC STATUS,Z
+00F0  2915  	GOTO	label26
+0115        label26
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_fope = 0b01101101
+			FCV_BITS_FOPE = 109;
+0115  306D  	MOVLW 0x6D
+0116  1683  	BSF STATUS, RP0
+0117  1303  	BCF STATUS, RP1
+0118  00AC  	MOVWF gbl_FCV_BITS_FOPE
+
+
+			break;
+0119  2932  	GOTO	label32
+
+		}
+		case 6:
+00F1  3A03  	XORLW 0x03
+00F2  1903  	BTFSC STATUS,Z
+00F3  291A  	GOTO	label27
+011A        label27
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_fope = 0b01111101
+			FCV_BITS_FOPE = 125;
+011A  307D  	MOVLW 0x7D
+011B  1683  	BSF STATUS, RP0
+011C  1303  	BCF STATUS, RP1
+011D  00AC  	MOVWF gbl_FCV_BITS_FOPE
+
+
+			break;
+011E  2932  	GOTO	label32
+
+		}
+		case 7:
+00F4  3A01  	XORLW 0x01
+00F5  1903  	BTFSC STATUS,Z
+00F6  291F  	GOTO	label28
+011F        label28
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_fope = 0b00000111
+			FCV_BITS_FOPE = 7;
+011F  3007  	MOVLW 0x07
+0120  1683  	BSF STATUS, RP0
+0121  1303  	BCF STATUS, RP1
+0122  00AC  	MOVWF gbl_FCV_BITS_FOPE
+
+
+			break;
+0123  2932  	GOTO	label32
+
+		}
+		case 8:
+00F7  3A0F  	XORLW 0x0F
+00F8  1903  	BTFSC STATUS,Z
+00F9  2924  	GOTO	label29
+0124        label29
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_fope = 0b01111111
+			FCV_BITS_FOPE = 127;
+0124  307F  	MOVLW 0x7F
+0125  1683  	BSF STATUS, RP0
+0126  1303  	BCF STATUS, RP1
+0127  00AC  	MOVWF gbl_FCV_BITS_FOPE
+
+
+			break;
+0128  2932  	GOTO	label32
+
+		}
+		case 9:
+00FA  3A01  	XORLW 0x01
+00FB  1903  	BTFSC STATUS,Z
+00FC  2929  	GOTO	label30
+0129        label30
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_fope = 0b01101111
+			FCV_BITS_FOPE = 111;
+0129  306F  	MOVLW 0x6F
+012A  1683  	BSF STATUS, RP0
+012B  1303  	BCF STATUS, RP1
+012C  00AC  	MOVWF gbl_FCV_BITS_FOPE
+
+
+			break;
+012D  2932  	GOTO	label32
+
+		}
+		case 0:
+00FD  3A09  	XORLW 0x09
+00FE  1903  	BTFSC STATUS,Z
+00FF  292E  	GOTO	label31
+012E        label31
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_fope = 0b00111111
+			FCV_BITS_FOPE = 63;
+012E  303F  	MOVLW 0x3F
+012F  1683  	BSF STATUS, RP0
+0130  1303  	BCF STATUS, RP1
+0131  00AC  	MOVWF gbl_FCV_BITS_FOPE
+
+
+			break;
+
+		}
+		// default:
+
+	}
+
+	//Switch
+	//Switch: digit_score?
+	switch (FCV_DIGIT_SCORE)
+	{
+		case 1:
+0132  1683  	BSF STATUS, RP0
+0133  1303  	BCF STATUS, RP1
+0134  082A  	MOVF gbl_FCV_DIGIT_SCORE, W
+0135  3A01  	XORLW 0x01
+0136  1903  	BTFSC STATUS,Z
+0137  2954  	GOTO	label33
+0154        label33
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_score = 0b00000110
+			FCV_BITS_SCORE = 6;
+0154  3006  	MOVLW 0x06
+0155  00A0  	MOVWF gbl_FCV_BITS_SCORE
+
+
+			break;
+
+		}
+		case 2:
+0138  3A03  	XORLW 0x03
+0139  1903  	BTFSC STATUS,Z
+013A  2957  	GOTO	label34
+0157        label34
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_score = 0b01011011
+			FCV_BITS_SCORE = 91;
+0157  305B  	MOVLW 0x5B
+0158  00A0  	MOVWF gbl_FCV_BITS_SCORE
+
+
+			break;
+
+		}
+		case 3:
+013B  3A01  	XORLW 0x01
+013C  1903  	BTFSC STATUS,Z
+013D  295A  	GOTO	label35
+015A        label35
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_score = 0b01001111
+			FCV_BITS_SCORE = 79;
+015A  304F  	MOVLW 0x4F
+015B  00A0  	MOVWF gbl_FCV_BITS_SCORE
+
+
+			break;
+
+		}
+		case 4:
+013E  3A07  	XORLW 0x07
+013F  1903  	BTFSC STATUS,Z
+0140  295D  	GOTO	label36
+015D        label36
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_score = 0b01100110
+			FCV_BITS_SCORE = 102;
+015D  3066  	MOVLW 0x66
+015E  00A0  	MOVWF gbl_FCV_BITS_SCORE
+
+
+			break;
+
+		}
+		case 5:
+0141  3A01  	XORLW 0x01
+0142  1903  	BTFSC STATUS,Z
+0143  2960  	GOTO	label37
+0160        label37
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_score = 0b01101101
+			FCV_BITS_SCORE = 109;
+0160  306D  	MOVLW 0x6D
+0161  00A0  	MOVWF gbl_FCV_BITS_SCORE
+
+
+			break;
+
+		}
+		case 6:
+0144  3A03  	XORLW 0x03
+0145  1903  	BTFSC STATUS,Z
+0146  2963  	GOTO	label38
+0163        label38
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_score = 0b01111101
+			FCV_BITS_SCORE = 125;
+0163  307D  	MOVLW 0x7D
+0164  00A0  	MOVWF gbl_FCV_BITS_SCORE
+
+
+			break;
+
+		}
+		case 7:
+0147  3A01  	XORLW 0x01
+0148  1903  	BTFSC STATUS,Z
+0149  2966  	GOTO	label39
+0166        label39
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_score = 0b00000111
+			FCV_BITS_SCORE = 7;
+0166  3007  	MOVLW 0x07
+0167  00A0  	MOVWF gbl_FCV_BITS_SCORE
+
+
+			break;
+
+		}
+		case 8:
+014A  3A0F  	XORLW 0x0F
+014B  1903  	BTFSC STATUS,Z
+014C  2969  	GOTO	label40
+0169        label40
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_score = 0b01111111
+			FCV_BITS_SCORE = 127;
+0169  307F  	MOVLW 0x7F
+016A  00A0  	MOVWF gbl_FCV_BITS_SCORE
+
+
+			break;
+
+		}
+		case 9:
+014D  3A01  	XORLW 0x01
+014E  1903  	BTFSC STATUS,Z
+014F  296C  	GOTO	label41
+016C        label41
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_score = 0b01101111
+			FCV_BITS_SCORE = 111;
+016C  306F  	MOVLW 0x6F
+016D  00A0  	MOVWF gbl_FCV_BITS_SCORE
+
+
+			break;
+
+		}
+		case 0:
+0150  3A09  	XORLW 0x09
+0151  1903  	BTFSC STATUS,Z
+0152  296F  	GOTO	label42
+016F        label42
+
+		{
+			//Calculation
+			//Calculation:
+			//  bits_score = 0b00111111
+			FCV_BITS_SCORE = 63;
+016F  303F  	MOVLW 0x3F
+0170  00A0  	MOVWF gbl_FCV_BITS_SCORE
+
+
+			break;
+
+		}
+		// default:
+
+	}
+
+}
+0153  0008  	RETURN
+0156  0008  	RETURN
+0159  0008  	RETURN
+015C  0008  	RETURN
+015F  0008  	RETURN
+0162  0008  	RETURN
+0165  0008  	RETURN
+0168  0008  	RETURN
+016B  0008  	RETURN
+016E  0008  	RETURN
+0171  0008  	RETURN
+
+
+
+void FCM_register()
+
+{
+
+	//Calculation
+	//Calculation:
+	//  digit_time = min_tens
+	//  digit_fope = 8
+	//  digit_score = home_score_tens
+	FCV_DIGIT_TIME = FCV_MIN_TENS;
+0215  1683  	BSF STATUS, RP0
+0216  1303  	BCF STATUS, RP1
+0217  0833  	MOVF gbl_FCV_MIN_TENS, W
+0218  00F9  	MOVWF gbl_FCV_DIGIT_TIME
+
+	FCV_DIGIT_FOPE = 8;
+0219  3008  	MOVLW 0x08
+021A  00F8  	MOVWF gbl_FCV_DIGIT_FOPE
+
+	FCV_DIGIT_SCORE = FCV_HOME_SCORE_TENS;
+021B  082B  	MOVF gbl_FCV_HOME_SCORE_TENS, W
+021C  00AA  	MOVWF gbl_FCV_DIGIT_SCORE
+
+
+	//Call Macro
+	//Call Macro: data_bank()
+	FCM_data_bank();
+021D  2090  	CALL FCM_data_b_00051
+
+
+	//clk
+	//Output: 0 -> C0
+	trisc = trisc & 0xFE;
+021E  30FE  	MOVLW 0xFE
+021F  0507  	ANDWF gbl_trisc, W
+0220  0087  	MOVWF gbl_trisc
+
+	if ((0))
+		portc = (portc & 0xFE) | 0x01;
+	else
+		portc = portc & 0xFE;
+0221  30FE  	MOVLW 0xFE
+0222  1283  	BCF STATUS, RP0
+0223  0507  	ANDWF gbl_portc, W
+0224  0087  	MOVWF gbl_portc
+
+
+	//Loop
+	//Loop: Loop 8 times
+	for (FCLV_LOOP1=0; FCLV_LOOP1<8; FCLV_LOOP1++)
+0225  1683  	BSF STATUS, RP0
+0226  01B4  	CLRF gbl_FCLV_LOOP1
+0227        label53
+0227  3008  	MOVLW 0x08
+0228  0234  	SUBWF gbl_FCLV_LOOP1, W
+0229  1803  	BTFSC STATUS,C
+022A  2AA8  	GOTO	label60
+02A6  0AB4  	INCF gbl_FCLV_LOOP1, F
+02A7  2A27  	GOTO	label53
+02A8        label60
+
+	{
+
+		//clk
+		//Output: 0 -> C0
+		trisc = trisc & 0xFE;
+022B  30FE  	MOVLW 0xFE
+022C  0507  	ANDWF gbl_trisc, W
+022D  0087  	MOVWF gbl_trisc
+
+		if ((0))
+			portc = (portc & 0xFE) | 0x01;
+		else
+			portc = portc & 0xFE;
+022E  30FE  	MOVLW 0xFE
+022F  1283  	BCF STATUS, RP0
+0230  0507  	ANDWF gbl_portc, W
+0231  0087  	MOVWF gbl_portc
+
+
+		//Calculation
+		//Calculation:
+		//  dat_time = bits_time AND 1
+		//  dat_fope = bits_fope AND 1
+		//  dat_score = bits_score AND 1
+		FCV_DAT_TIME = FCV_BITS_TIME & 1;
+0232  3001  	MOVLW 0x01
+0233  1683  	BSF STATUS, RP0
+0234  052D  	ANDWF gbl_FCV_BITS_TIME, W
+0235  00B8  	MOVWF CompTempVar2195
+0236  01B9  	CLRF CompTempVar2196
+0237  08B8  	MOVF CompTempVar2195, F
+0238  1D03  	BTFSS STATUS,Z
+0239  1439  	BSF CompTempVar2196,0
+023A  117C  	BCF gbl_FCV_DAT_TIME,2
+023B  0839  	MOVF CompTempVar2196, W
+023C  1D03  	BTFSS STATUS,Z
+023D  157C  	BSF gbl_FCV_DAT_TIME,2
+
+		FCV_DAT_FOPE = FCV_BITS_FOPE & 1;
+023E  3001  	MOVLW 0x01
+023F  052C  	ANDWF gbl_FCV_BITS_FOPE, W
+0240  00B8  	MOVWF CompTempVar2197
+0241  01B9  	CLRF CompTempVar2198
+0242  08B8  	MOVF CompTempVar2197, F
+0243  1D03  	BTFSS STATUS,Z
+0244  1439  	BSF CompTempVar2198,0
+0245  10FC  	BCF gbl_FCV_DAT_FOPE,1
+0246  0839  	MOVF CompTempVar2198, W
+0247  1D03  	BTFSS STATUS,Z
+0248  14FC  	BSF gbl_FCV_DAT_FOPE,1
+
+		FCV_DAT_SCORE = FCV_BITS_SCORE & 1;
+0249  3001  	MOVLW 0x01
+024A  0520  	ANDWF gbl_FCV_BITS_SCORE, W
+024B  00B8  	MOVWF CompTempVar2199
+024C  01B9  	CLRF CompTempVar2200
+024D  08B8  	MOVF CompTempVar2199, F
+024E  1D03  	BTFSS STATUS,Z
+024F  1439  	BSF CompTempVar2200,0
+0250  107C  	BCF gbl_FCV_DAT_SCORE,0
+0251  0839  	MOVF CompTempVar2200, W
+0252  1D03  	BTFSS STATUS,Z
+0253  147C  	BSF gbl_FCV_DAT_SCORE,0
+
+
+		//data_time
+		//Output: dat_time -> C2
+		trisc = trisc & 0xFB;
+0254  30FB  	MOVLW 0xFB
+0255  0507  	ANDWF gbl_trisc, W
+0256  0087  	MOVWF gbl_trisc
+
+		if ((FCV_DAT_TIME))
+0257  1D7C  	BTFSS gbl_FCV_DAT_TIME,2
+0258  2A63  	GOTO	label54
+0263        label54
+
+			portc = (portc & 0xFB) | 0x04;
+0259  30FB  	MOVLW 0xFB
+025A  1283  	BCF STATUS, RP0
+025B  0507  	ANDWF gbl_portc, W
+025C  1683  	BSF STATUS, RP0
+025D  00B8  	MOVWF CompTempVar2201
+025E  3004  	MOVLW 0x04
+025F  0438  	IORWF CompTempVar2201, W
+0260  1283  	BCF STATUS, RP0
+0261  0087  	MOVWF gbl_portc
+
+		else
+0262  2A67  	GOTO	label55
+0267        label55
+
+			portc = portc & 0xFB;
+0263  30FB  	MOVLW 0xFB
+0264  1283  	BCF STATUS, RP0
+0265  0507  	ANDWF gbl_portc, W
+0266  0087  	MOVWF gbl_portc
+
+
+		//data_fope
+		//Output: dat_fope -> C4
+		trisc = trisc & 0xEF;
+0267  30EF  	MOVLW 0xEF
+0268  1683  	BSF STATUS, RP0
+0269  0507  	ANDWF gbl_trisc, W
+026A  0087  	MOVWF gbl_trisc
+
+		if ((FCV_DAT_FOPE))
+026B  1CFC  	BTFSS gbl_FCV_DAT_FOPE,1
+026C  2A77  	GOTO	label56
+0277        label56
+
+			portc = (portc & 0xEF) | 0x10;
+026D  30EF  	MOVLW 0xEF
+026E  1283  	BCF STATUS, RP0
+026F  0507  	ANDWF gbl_portc, W
+0270  1683  	BSF STATUS, RP0
+0271  00B8  	MOVWF CompTempVar2202
+0272  3010  	MOVLW 0x10
+0273  0438  	IORWF CompTempVar2202, W
+0274  1283  	BCF STATUS, RP0
+0275  0087  	MOVWF gbl_portc
+
+		else
+0276  2A7B  	GOTO	label57
+027B        label57
+
+			portc = portc & 0xEF;
+0277  30EF  	MOVLW 0xEF
+0278  1283  	BCF STATUS, RP0
+0279  0507  	ANDWF gbl_portc, W
+027A  0087  	MOVWF gbl_portc
+
+
+		//data_score
+		//Output: dat_score -> C3
+		trisc = trisc & 0xF7;
+027B  30F7  	MOVLW 0xF7
+027C  1683  	BSF STATUS, RP0
+027D  0507  	ANDWF gbl_trisc, W
+027E  0087  	MOVWF gbl_trisc
+
+		if ((FCV_DAT_SCORE))
+027F  1C7C  	BTFSS gbl_FCV_DAT_SCORE,0
+0280  2A8B  	GOTO	label58
+028B        label58
+
+			portc = (portc & 0xF7) | 0x08;
+0281  30F7  	MOVLW 0xF7
+0282  1283  	BCF STATUS, RP0
+0283  0507  	ANDWF gbl_portc, W
+0284  1683  	BSF STATUS, RP0
+0285  00B8  	MOVWF CompTempVar2203
+0286  3008  	MOVLW 0x08
+0287  0438  	IORWF CompTempVar2203, W
+0288  1283  	BCF STATUS, RP0
+0289  0087  	MOVWF gbl_portc
+
+		else
+028A  2A8F  	GOTO	label59
+028F        label59
+
+			portc = portc & 0xF7;
+028B  30F7  	MOVLW 0xF7
+028C  1283  	BCF STATUS, RP0
+028D  0507  	ANDWF gbl_portc, W
+028E  0087  	MOVWF gbl_portc
+
+
+		//clk
+		//Output: 1 -> C0
+		trisc = trisc & 0xFE;
+028F  30FE  	MOVLW 0xFE
+0290  1683  	BSF STATUS, RP0
+0291  0507  	ANDWF gbl_trisc, W
+0292  0087  	MOVWF gbl_trisc
+
+		if ((1))
+			portc = (portc & 0xFE) | 0x01;
+0293  30FE  	MOVLW 0xFE
+0294  1283  	BCF STATUS, RP0
+0295  0507  	ANDWF gbl_portc, W
+0296  1683  	BSF STATUS, RP0
+0297  00B8  	MOVWF CompTempVar2204
+0298  3001  	MOVLW 0x01
+0299  0438  	IORWF CompTempVar2204, W
+029A  1283  	BCF STATUS, RP0
+029B  0087  	MOVWF gbl_portc
+
+		else
+			portc = portc & 0xFE;
+
+		//Calculation
+		//Calculation:
+		//  bits_time = bits_time >> 1
+		//  bits_fope = bits_fope >> 1
+		//  bits_score = bits_score >> 1
+		FCV_BITS_TIME = FCV_BITS_TIME >> 1;
+029C  1683  	BSF STATUS, RP0
+029D  08AD  	MOVF gbl_FCV_BITS_TIME, F
+029E  1003  	BCF STATUS,C
+029F  0CAD  	RRF gbl_FCV_BITS_TIME, F
+
+		FCV_BITS_FOPE = FCV_BITS_FOPE >> 1;
+02A0  08AC  	MOVF gbl_FCV_BITS_FOPE, F
+02A1  1003  	BCF STATUS,C
+02A2  0CAC  	RRF gbl_FCV_BITS_FOPE, F
+
+		FCV_BITS_SCORE = FCV_BITS_SCORE >> 1;
+02A3  08A0  	MOVF gbl_FCV_BITS_SCORE, F
+02A4  1003  	BCF STATUS,C
+02A5  0CA0  	RRF gbl_FCV_BITS_SCORE, F
+
+
+
+	}
+
+	//Calculation
+	//Calculation:
+	//  digit_time = min_ones
+	//  digit_fope = period
+	//  digit_score = home_score_ones
+	FCV_DIGIT_TIME = FCV_MIN_ONES;
+02A8  0824  	MOVF gbl_FCV_MIN_ONES, W
+02A9  00F9  	MOVWF gbl_FCV_DIGIT_TIME
+
+	FCV_DIGIT_FOPE = FCV_PERIOD;
+02AA  087E  	MOVF gbl_FCV_PERIOD, W
+02AB  00F8  	MOVWF gbl_FCV_DIGIT_FOPE
+
+	FCV_DIGIT_SCORE = FCV_HOME_SCORE_ONES;
+02AC  087B  	MOVF gbl_FCV_HOME_SCORE_ONES, W
+02AD  00AA  	MOVWF gbl_FCV_DIGIT_SCORE
+
+
+	//Call Macro
+	//Call Macro: data_bank()
+	FCM_data_bank();
+02AE  2090  	CALL FCM_data_b_00051
+
+
+	//clk
+	//Output: 0 -> C0
+	trisc = trisc & 0xFE;
+02AF  30FE  	MOVLW 0xFE
+02B0  0507  	ANDWF gbl_trisc, W
+02B1  0087  	MOVWF gbl_trisc
+
+	if ((0))
+		portc = (portc & 0xFE) | 0x01;
+	else
+		portc = portc & 0xFE;
+02B2  30FE  	MOVLW 0xFE
+02B3  1283  	BCF STATUS, RP0
+02B4  0507  	ANDWF gbl_portc, W
+02B5  0087  	MOVWF gbl_portc
+
+
+	//Loop
+	//Loop: Loop 8 times
+	for (FCLV_LOOP2=0; FCLV_LOOP2<8; FCLV_LOOP2++)
+02B6  1683  	BSF STATUS, RP0
+02B7  01B5  	CLRF gbl_FCLV_LOOP2
+02B8        label61
+02B8  3008  	MOVLW 0x08
+02B9  0235  	SUBWF gbl_FCLV_LOOP2, W
+02BA  1803  	BTFSC STATUS,C
+02BB  2B39  	GOTO	label68
+0337  0AB5  	INCF gbl_FCLV_LOOP2, F
+0338  2AB8  	GOTO	label61
+0339        label68
+
+	{
+
+		//clk
+		//Output: 0 -> C0
+		trisc = trisc & 0xFE;
+02BC  30FE  	MOVLW 0xFE
+02BD  0507  	ANDWF gbl_trisc, W
+02BE  0087  	MOVWF gbl_trisc
+
+		if ((0))
+			portc = (portc & 0xFE) | 0x01;
+		else
+			portc = portc & 0xFE;
+02BF  30FE  	MOVLW 0xFE
+02C0  1283  	BCF STATUS, RP0
+02C1  0507  	ANDWF gbl_portc, W
+02C2  0087  	MOVWF gbl_portc
+
+
+		//Calculation
+		//Calculation:
+		//  dat_time = bits_time AND 1
+		//  dat_fope = bits_fope AND 1
+		//  dat_score = bits_score AND 1
+		FCV_DAT_TIME = FCV_BITS_TIME & 1;
+02C3  3001  	MOVLW 0x01
+02C4  1683  	BSF STATUS, RP0
+02C5  052D  	ANDWF gbl_FCV_BITS_TIME, W
+02C6  00B8  	MOVWF CompTempVar2208
+02C7  01B9  	CLRF CompTempVar2209
+02C8  08B8  	MOVF CompTempVar2208, F
+02C9  1D03  	BTFSS STATUS,Z
+02CA  1439  	BSF CompTempVar2209,0
+02CB  117C  	BCF gbl_FCV_DAT_TIME,2
+02CC  0839  	MOVF CompTempVar2209, W
+02CD  1D03  	BTFSS STATUS,Z
+02CE  157C  	BSF gbl_FCV_DAT_TIME,2
+
+		FCV_DAT_FOPE = FCV_BITS_FOPE & 1;
+02CF  3001  	MOVLW 0x01
+02D0  052C  	ANDWF gbl_FCV_BITS_FOPE, W
+02D1  00B8  	MOVWF CompTempVar2210
+02D2  01B9  	CLRF CompTempVar2211
+02D3  08B8  	MOVF CompTempVar2210, F
+02D4  1D03  	BTFSS STATUS,Z
+02D5  1439  	BSF CompTempVar2211,0
+02D6  10FC  	BCF gbl_FCV_DAT_FOPE,1
+02D7  0839  	MOVF CompTempVar2211, W
+02D8  1D03  	BTFSS STATUS,Z
+02D9  14FC  	BSF gbl_FCV_DAT_FOPE,1
+
+		FCV_DAT_SCORE = FCV_BITS_SCORE & 1;
+02DA  3001  	MOVLW 0x01
+02DB  0520  	ANDWF gbl_FCV_BITS_SCORE, W
+02DC  00B8  	MOVWF CompTempVar2212
+02DD  01B9  	CLRF CompTempVar2213
+02DE  08B8  	MOVF CompTempVar2212, F
+02DF  1D03  	BTFSS STATUS,Z
+02E0  1439  	BSF CompTempVar2213,0
+02E1  107C  	BCF gbl_FCV_DAT_SCORE,0
+02E2  0839  	MOVF CompTempVar2213, W
+02E3  1D03  	BTFSS STATUS,Z
+02E4  147C  	BSF gbl_FCV_DAT_SCORE,0
+
+
+		//data_time
+		//Output: dat_time -> C2
+		trisc = trisc & 0xFB;
+02E5  30FB  	MOVLW 0xFB
+02E6  0507  	ANDWF gbl_trisc, W
+02E7  0087  	MOVWF gbl_trisc
+
+		if ((FCV_DAT_TIME))
+02E8  1D7C  	BTFSS gbl_FCV_DAT_TIME,2
+02E9  2AF4  	GOTO	label62
+02F4        label62
+
+			portc = (portc & 0xFB) | 0x04;
+02EA  30FB  	MOVLW 0xFB
+02EB  1283  	BCF STATUS, RP0
+02EC  0507  	ANDWF gbl_portc, W
+02ED  1683  	BSF STATUS, RP0
+02EE  00B8  	MOVWF CompTempVar2214
+02EF  3004  	MOVLW 0x04
+02F0  0438  	IORWF CompTempVar2214, W
+02F1  1283  	BCF STATUS, RP0
+02F2  0087  	MOVWF gbl_portc
+
+		else
+02F3  2AF8  	GOTO	label63
+02F8        label63
+
+			portc = portc & 0xFB;
+02F4  30FB  	MOVLW 0xFB
+02F5  1283  	BCF STATUS, RP0
+02F6  0507  	ANDWF gbl_portc, W
+02F7  0087  	MOVWF gbl_portc
+
+
+		//data_fope
+		//Output: dat_fope -> C4
+		trisc = trisc & 0xEF;
+02F8  30EF  	MOVLW 0xEF
+02F9  1683  	BSF STATUS, RP0
+02FA  0507  	ANDWF gbl_trisc, W
+02FB  0087  	MOVWF gbl_trisc
+
+		if ((FCV_DAT_FOPE))
+02FC  1CFC  	BTFSS gbl_FCV_DAT_FOPE,1
+02FD  2B08  	GOTO	label64
+0308        label64
+
+			portc = (portc & 0xEF) | 0x10;
+02FE  30EF  	MOVLW 0xEF
+02FF  1283  	BCF STATUS, RP0
+0300  0507  	ANDWF gbl_portc, W
+0301  1683  	BSF STATUS, RP0
+0302  00B8  	MOVWF CompTempVar2215
+0303  3010  	MOVLW 0x10
+0304  0438  	IORWF CompTempVar2215, W
+0305  1283  	BCF STATUS, RP0
+0306  0087  	MOVWF gbl_portc
+
+		else
+0307  2B0C  	GOTO	label65
+030C        label65
+
+			portc = portc & 0xEF;
+0308  30EF  	MOVLW 0xEF
+0309  1283  	BCF STATUS, RP0
+030A  0507  	ANDWF gbl_portc, W
+030B  0087  	MOVWF gbl_portc
+
+
+		//data_score
+		//Output: dat_score -> C3
+		trisc = trisc & 0xF7;
+030C  30F7  	MOVLW 0xF7
+030D  1683  	BSF STATUS, RP0
+030E  0507  	ANDWF gbl_trisc, W
+030F  0087  	MOVWF gbl_trisc
+
+		if ((FCV_DAT_SCORE))
+0310  1C7C  	BTFSS gbl_FCV_DAT_SCORE,0
+0311  2B1C  	GOTO	label66
+031C        label66
+
+			portc = (portc & 0xF7) | 0x08;
+0312  30F7  	MOVLW 0xF7
+0313  1283  	BCF STATUS, RP0
+0314  0507  	ANDWF gbl_portc, W
+0315  1683  	BSF STATUS, RP0
+0316  00B8  	MOVWF CompTempVar2216
+0317  3008  	MOVLW 0x08
+0318  0438  	IORWF CompTempVar2216, W
+0319  1283  	BCF STATUS, RP0
+031A  0087  	MOVWF gbl_portc
+
+		else
+031B  2B20  	GOTO	label67
+0320        label67
+
+			portc = portc & 0xF7;
+031C  30F7  	MOVLW 0xF7
+031D  1283  	BCF STATUS, RP0
+031E  0507  	ANDWF gbl_portc, W
+031F  0087  	MOVWF gbl_portc
+
+
+		//clk
+		//Output: 1 -> C0
+		trisc = trisc & 0xFE;
+0320  30FE  	MOVLW 0xFE
+0321  1683  	BSF STATUS, RP0
+0322  0507  	ANDWF gbl_trisc, W
+0323  0087  	MOVWF gbl_trisc
+
+		if ((1))
+			portc = (portc & 0xFE) | 0x01;
+0324  30FE  	MOVLW 0xFE
+0325  1283  	BCF STATUS, RP0
+0326  0507  	ANDWF gbl_portc, W
+0327  1683  	BSF STATUS, RP0
+0328  00B8  	MOVWF CompTempVar2217
+0329  3001  	MOVLW 0x01
+032A  0438  	IORWF CompTempVar2217, W
+032B  1283  	BCF STATUS, RP0
+032C  0087  	MOVWF gbl_portc
+
+		else
+			portc = portc & 0xFE;
+
+		//Calculation
+		//Calculation:
+		//  bits_time = bits_time >> 1
+		//  bits_fope = bits_fope >> 1
+		//  bits_score = bits_score >> 1
+		FCV_BITS_TIME = FCV_BITS_TIME >> 1;
+032D  1683  	BSF STATUS, RP0
+032E  08AD  	MOVF gbl_FCV_BITS_TIME, F
+032F  1003  	BCF STATUS,C
+0330  0CAD  	RRF gbl_FCV_BITS_TIME, F
+
+		FCV_BITS_FOPE = FCV_BITS_FOPE >> 1;
+0331  08AC  	MOVF gbl_FCV_BITS_FOPE, F
+0332  1003  	BCF STATUS,C
+0333  0CAC  	RRF gbl_FCV_BITS_FOPE, F
+
+		FCV_BITS_SCORE = FCV_BITS_SCORE >> 1;
+0334  08A0  	MOVF gbl_FCV_BITS_SCORE, F
+0335  1003  	BCF STATUS,C
+0336  0CA0  	RRF gbl_FCV_BITS_SCORE, F
+
+
+
+	}
+
+	//Calculation
+	//Calculation:
+	//  digit_time = sec_tens
+	//  digit_fope = home_foul
+	//  digit_score = away_score_tens
+	FCV_DIGIT_TIME = FCV_SEC_TENS;
+0339  0828  	MOVF gbl_FCV_SEC_TENS, W
+033A  00F9  	MOVWF gbl_FCV_DIGIT_TIME
+
+	FCV_DIGIT_FOPE = FCV_HOME_FOUL;
+033B  0823  	MOVF gbl_FCV_HOME_FOUL, W
+033C  00F8  	MOVWF gbl_FCV_DIGIT_FOPE
+
+	FCV_DIGIT_SCORE = FCV_AWAY_SCORE_TENS;
+033D  0821  	MOVF gbl_FCV_AWAY_SCORE_TENS, W
+033E  00AA  	MOVWF gbl_FCV_DIGIT_SCORE
+
+
+	//Call Macro
+	//Call Macro: data_bank()
+	FCM_data_bank();
+033F  2090  	CALL FCM_data_b_00051
+
+
+	//clk
+	//Output: 0 -> C0
+	trisc = trisc & 0xFE;
+0340  30FE  	MOVLW 0xFE
+0341  0507  	ANDWF gbl_trisc, W
+0342  0087  	MOVWF gbl_trisc
+
+	if ((0))
+		portc = (portc & 0xFE) | 0x01;
+	else
+		portc = portc & 0xFE;
+0343  30FE  	MOVLW 0xFE
+0344  1283  	BCF STATUS, RP0
+0345  0507  	ANDWF gbl_portc, W
+0346  0087  	MOVWF gbl_portc
+
+
+	//Loop
+	//Loop: Loop 8 times
+	for (FCLV_LOOP3=0; FCLV_LOOP3<8; FCLV_LOOP3++)
+0347  1683  	BSF STATUS, RP0
+0348  01B6  	CLRF gbl_FCLV_LOOP3
+0349        label69
+0349  3008  	MOVLW 0x08
+034A  0236  	SUBWF gbl_FCLV_LOOP3, W
+034B  1803  	BTFSC STATUS,C
+034C  2BCA  	GOTO	label76
+03C8  0AB6  	INCF gbl_FCLV_LOOP3, F
+03C9  2B49  	GOTO	label69
+03CA        label76
+
+	{
+
+		//clk
+		//Output: 0 -> C0
+		trisc = trisc & 0xFE;
+034D  30FE  	MOVLW 0xFE
+034E  0507  	ANDWF gbl_trisc, W
+034F  0087  	MOVWF gbl_trisc
+
+		if ((0))
+			portc = (portc & 0xFE) | 0x01;
+		else
+			portc = portc & 0xFE;
+0350  30FE  	MOVLW 0xFE
+0351  1283  	BCF STATUS, RP0
+0352  0507  	ANDWF gbl_portc, W
+0353  0087  	MOVWF gbl_portc
+
+
+		//Calculation
+		//Calculation:
+		//  dat_time = bits_time AND 1
+		//  dat_fope = bits_fope AND 1
+		//  dat_score = bits_score AND 1
+		FCV_DAT_TIME = FCV_BITS_TIME & 1;
+0354  3001  	MOVLW 0x01
+0355  1683  	BSF STATUS, RP0
+0356  052D  	ANDWF gbl_FCV_BITS_TIME, W
+0357  00B8  	MOVWF CompTempVar2221
+0358  01B9  	CLRF CompTempVar2222
+0359  08B8  	MOVF CompTempVar2221, F
+035A  1D03  	BTFSS STATUS,Z
+035B  1439  	BSF CompTempVar2222,0
+035C  117C  	BCF gbl_FCV_DAT_TIME,2
+035D  0839  	MOVF CompTempVar2222, W
+035E  1D03  	BTFSS STATUS,Z
+035F  157C  	BSF gbl_FCV_DAT_TIME,2
+
+		FCV_DAT_FOPE = FCV_BITS_FOPE & 1;
+0360  3001  	MOVLW 0x01
+0361  052C  	ANDWF gbl_FCV_BITS_FOPE, W
+0362  00B8  	MOVWF CompTempVar2223
+0363  01B9  	CLRF CompTempVar2224
+0364  08B8  	MOVF CompTempVar2223, F
+0365  1D03  	BTFSS STATUS,Z
+0366  1439  	BSF CompTempVar2224,0
+0367  10FC  	BCF gbl_FCV_DAT_FOPE,1
+0368  0839  	MOVF CompTempVar2224, W
+0369  1D03  	BTFSS STATUS,Z
+036A  14FC  	BSF gbl_FCV_DAT_FOPE,1
+
+		FCV_DAT_SCORE = FCV_BITS_SCORE & 1;
+036B  3001  	MOVLW 0x01
+036C  0520  	ANDWF gbl_FCV_BITS_SCORE, W
+036D  00B8  	MOVWF CompTempVar2225
+036E  01B9  	CLRF CompTempVar2226
+036F  08B8  	MOVF CompTempVar2225, F
+0370  1D03  	BTFSS STATUS,Z
+0371  1439  	BSF CompTempVar2226,0
+0372  107C  	BCF gbl_FCV_DAT_SCORE,0
+0373  0839  	MOVF CompTempVar2226, W
+0374  1D03  	BTFSS STATUS,Z
+0375  147C  	BSF gbl_FCV_DAT_SCORE,0
+
+
+		//data_time
+		//Output: dat_time -> C2
+		trisc = trisc & 0xFB;
+0376  30FB  	MOVLW 0xFB
+0377  0507  	ANDWF gbl_trisc, W
+0378  0087  	MOVWF gbl_trisc
+
+		if ((FCV_DAT_TIME))
+0379  1D7C  	BTFSS gbl_FCV_DAT_TIME,2
+037A  2B85  	GOTO	label70
+0385        label70
+
+			portc = (portc & 0xFB) | 0x04;
+037B  30FB  	MOVLW 0xFB
+037C  1283  	BCF STATUS, RP0
+037D  0507  	ANDWF gbl_portc, W
+037E  1683  	BSF STATUS, RP0
+037F  00B8  	MOVWF CompTempVar2227
+0380  3004  	MOVLW 0x04
+0381  0438  	IORWF CompTempVar2227, W
+0382  1283  	BCF STATUS, RP0
+0383  0087  	MOVWF gbl_portc
+
+		else
+0384  2B89  	GOTO	label71
+0389        label71
+
+			portc = portc & 0xFB;
+0385  30FB  	MOVLW 0xFB
+0386  1283  	BCF STATUS, RP0
+0387  0507  	ANDWF gbl_portc, W
+0388  0087  	MOVWF gbl_portc
+
+
+		//data_fope
+		//Output: dat_fope -> C4
+		trisc = trisc & 0xEF;
+0389  30EF  	MOVLW 0xEF
+038A  1683  	BSF STATUS, RP0
+038B  0507  	ANDWF gbl_trisc, W
+038C  0087  	MOVWF gbl_trisc
+
+		if ((FCV_DAT_FOPE))
+038D  1CFC  	BTFSS gbl_FCV_DAT_FOPE,1
+038E  2B99  	GOTO	label72
+0399        label72
+
+			portc = (portc & 0xEF) | 0x10;
+038F  30EF  	MOVLW 0xEF
+0390  1283  	BCF STATUS, RP0
+0391  0507  	ANDWF gbl_portc, W
+0392  1683  	BSF STATUS, RP0
+0393  00B8  	MOVWF CompTempVar2228
+0394  3010  	MOVLW 0x10
+0395  0438  	IORWF CompTempVar2228, W
+0396  1283  	BCF STATUS, RP0
+0397  0087  	MOVWF gbl_portc
+
+		else
+0398  2B9D  	GOTO	label73
+039D        label73
+
+			portc = portc & 0xEF;
+0399  30EF  	MOVLW 0xEF
+039A  1283  	BCF STATUS, RP0
+039B  0507  	ANDWF gbl_portc, W
+039C  0087  	MOVWF gbl_portc
+
+
+		//data_score
+		//Output: dat_score -> C3
+		trisc = trisc & 0xF7;
+039D  30F7  	MOVLW 0xF7
+039E  1683  	BSF STATUS, RP0
+039F  0507  	ANDWF gbl_trisc, W
+03A0  0087  	MOVWF gbl_trisc
+
+		if ((FCV_DAT_SCORE))
+03A1  1C7C  	BTFSS gbl_FCV_DAT_SCORE,0
+03A2  2BAD  	GOTO	label74
+03AD        label74
+
+			portc = (portc & 0xF7) | 0x08;
+03A3  30F7  	MOVLW 0xF7
+03A4  1283  	BCF STATUS, RP0
+03A5  0507  	ANDWF gbl_portc, W
+03A6  1683  	BSF STATUS, RP0
+03A7  00B8  	MOVWF CompTempVar2229
+03A8  3008  	MOVLW 0x08
+03A9  0438  	IORWF CompTempVar2229, W
+03AA  1283  	BCF STATUS, RP0
+03AB  0087  	MOVWF gbl_portc
+
+		else
+03AC  2BB1  	GOTO	label75
+03B1        label75
+
+			portc = portc & 0xF7;
+03AD  30F7  	MOVLW 0xF7
+03AE  1283  	BCF STATUS, RP0
+03AF  0507  	ANDWF gbl_portc, W
+03B0  0087  	MOVWF gbl_portc
+
+
+		//clk
+		//Output: 1 -> C0
+		trisc = trisc & 0xFE;
+03B1  30FE  	MOVLW 0xFE
+03B2  1683  	BSF STATUS, RP0
+03B3  0507  	ANDWF gbl_trisc, W
+03B4  0087  	MOVWF gbl_trisc
+
+		if ((1))
+			portc = (portc & 0xFE) | 0x01;
+03B5  30FE  	MOVLW 0xFE
+03B6  1283  	BCF STATUS, RP0
+03B7  0507  	ANDWF gbl_portc, W
+03B8  1683  	BSF STATUS, RP0
+03B9  00B8  	MOVWF CompTempVar2230
+03BA  3001  	MOVLW 0x01
+03BB  0438  	IORWF CompTempVar2230, W
+03BC  1283  	BCF STATUS, RP0
+03BD  0087  	MOVWF gbl_portc
+
+		else
+			portc = portc & 0xFE;
+
+		//Calculation
+		//Calculation:
+		//  bits_time = bits_time >> 1
+		//  bits_fope = bits_fope >> 1
+		//  bits_score = bits_score >> 1
+		FCV_BITS_TIME = FCV_BITS_TIME >> 1;
+03BE  1683  	BSF STATUS, RP0
+03BF  08AD  	MOVF gbl_FCV_BITS_TIME, F
+03C0  1003  	BCF STATUS,C
+03C1  0CAD  	RRF gbl_FCV_BITS_TIME, F
+
+		FCV_BITS_FOPE = FCV_BITS_FOPE >> 1;
+03C2  08AC  	MOVF gbl_FCV_BITS_FOPE, F
+03C3  1003  	BCF STATUS,C
+03C4  0CAC  	RRF gbl_FCV_BITS_FOPE, F
+
+		FCV_BITS_SCORE = FCV_BITS_SCORE >> 1;
+03C5  08A0  	MOVF gbl_FCV_BITS_SCORE, F
+03C6  1003  	BCF STATUS,C
+03C7  0CA0  	RRF gbl_FCV_BITS_SCORE, F
+
+
+
+	}
+
+	//Calculation
+	//Calculation:
+	//  digit_time = sec_ones
+	//  digit_fope = away_foul
+	//  digit_score = away_score_ones
+	FCV_DIGIT_TIME = FCV_SEC_ONES;
+03CA  0832  	MOVF gbl_FCV_SEC_ONES, W
+03CB  00F9  	MOVWF gbl_FCV_DIGIT_TIME
+
+	FCV_DIGIT_FOPE = FCV_AWAY_FOUL;
+03CC  0831  	MOVF gbl_FCV_AWAY_FOUL, W
+03CD  00F8  	MOVWF gbl_FCV_DIGIT_FOPE
+
+	FCV_DIGIT_SCORE = FCV_AWAY_SCORE_ONES;
+03CE  0829  	MOVF gbl_FCV_AWAY_SCORE_ONES, W
+03CF  00AA  	MOVWF gbl_FCV_DIGIT_SCORE
+
+
+	//Call Macro
+	//Call Macro: data_bank()
+	FCM_data_bank();
+03D0  2090  	CALL FCM_data_b_00051
+
+
+	//Calculation
+	//Calculation:
+	//  bits_time = bits_time + 0b10000000
+	FCV_BITS_TIME = FCV_BITS_TIME + 128;
+03D1  3080  	MOVLW 0x80
+03D2  072D  	ADDWF gbl_FCV_BITS_TIME, W
+03D3  00AD  	MOVWF gbl_FCV_BITS_TIME
+
+
+	//clk
+	//Output: 0 -> C0
+	trisc = trisc & 0xFE;
+03D4  30FE  	MOVLW 0xFE
+03D5  0507  	ANDWF gbl_trisc, W
+03D6  0087  	MOVWF gbl_trisc
+
+	if ((0))
+		portc = (portc & 0xFE) | 0x01;
+	else
+		portc = portc & 0xFE;
+03D7  30FE  	MOVLW 0xFE
+03D8  1283  	BCF STATUS, RP0
+03D9  0507  	ANDWF gbl_portc, W
+03DA  0087  	MOVWF gbl_portc
+
+
+	//Loop
+	//Loop: Loop 8 times
+	for (FCLV_LOOP4=0; FCLV_LOOP4<8; FCLV_LOOP4++)
+03DB  1683  	BSF STATUS, RP0
+03DC  01B7  	CLRF gbl_FCLV_LOOP4
+03DD        label77
+03DD  3008  	MOVLW 0x08
+03DE  0237  	SUBWF gbl_FCLV_LOOP4, W
+03DF  1803  	BTFSC STATUS,C
+03E0  2C5E  	GOTO	label84
+045C  0AB7  	INCF gbl_FCLV_LOOP4, F
+045D  2BDD  	GOTO	label77
+045E        label84
+
+	{
+
+		//clk
+		//Output: 0 -> C0
+		trisc = trisc & 0xFE;
+03E1  30FE  	MOVLW 0xFE
+03E2  0507  	ANDWF gbl_trisc, W
+03E3  0087  	MOVWF gbl_trisc
+
+		if ((0))
+			portc = (portc & 0xFE) | 0x01;
+		else
+			portc = portc & 0xFE;
+03E4  30FE  	MOVLW 0xFE
+03E5  1283  	BCF STATUS, RP0
+03E6  0507  	ANDWF gbl_portc, W
+03E7  0087  	MOVWF gbl_portc
+
+
+		//Calculation
+		//Calculation:
+		//  dat_time = bits_time AND 1
+		//  dat_fope = bits_fope AND 1
+		//  dat_score = bits_score AND 1
+		FCV_DAT_TIME = FCV_BITS_TIME & 1;
+03E8  3001  	MOVLW 0x01
+03E9  1683  	BSF STATUS, RP0
+03EA  052D  	ANDWF gbl_FCV_BITS_TIME, W
+03EB  00B8  	MOVWF CompTempVar2234
+03EC  01B9  	CLRF CompTempVar2235
+03ED  08B8  	MOVF CompTempVar2234, F
+03EE  1D03  	BTFSS STATUS,Z
+03EF  1439  	BSF CompTempVar2235,0
+03F0  117C  	BCF gbl_FCV_DAT_TIME,2
+03F1  0839  	MOVF CompTempVar2235, W
+03F2  1D03  	BTFSS STATUS,Z
+03F3  157C  	BSF gbl_FCV_DAT_TIME,2
+
+		FCV_DAT_FOPE = FCV_BITS_FOPE & 1;
+03F4  3001  	MOVLW 0x01
+03F5  052C  	ANDWF gbl_FCV_BITS_FOPE, W
+03F6  00B8  	MOVWF CompTempVar2236
+03F7  01B9  	CLRF CompTempVar2237
+03F8  08B8  	MOVF CompTempVar2236, F
+03F9  1D03  	BTFSS STATUS,Z
+03FA  1439  	BSF CompTempVar2237,0
+03FB  10FC  	BCF gbl_FCV_DAT_FOPE,1
+03FC  0839  	MOVF CompTempVar2237, W
+03FD  1D03  	BTFSS STATUS,Z
+03FE  14FC  	BSF gbl_FCV_DAT_FOPE,1
+
+		FCV_DAT_SCORE = FCV_BITS_SCORE & 1;
+03FF  3001  	MOVLW 0x01
+0400  0520  	ANDWF gbl_FCV_BITS_SCORE, W
+0401  00B8  	MOVWF CompTempVar2238
+0402  01B9  	CLRF CompTempVar2239
+0403  08B8  	MOVF CompTempVar2238, F
+0404  1D03  	BTFSS STATUS,Z
+0405  1439  	BSF CompTempVar2239,0
+0406  107C  	BCF gbl_FCV_DAT_SCORE,0
+0407  0839  	MOVF CompTempVar2239, W
+0408  1D03  	BTFSS STATUS,Z
+0409  147C  	BSF gbl_FCV_DAT_SCORE,0
+
+
+		//data_time
+		//Output: dat_time -> C2
+		trisc = trisc & 0xFB;
+040A  30FB  	MOVLW 0xFB
+040B  0507  	ANDWF gbl_trisc, W
+040C  0087  	MOVWF gbl_trisc
+
+		if ((FCV_DAT_TIME))
+040D  1D7C  	BTFSS gbl_FCV_DAT_TIME,2
+040E  2C19  	GOTO	label78
+0419        label78
+
+			portc = (portc & 0xFB) | 0x04;
+040F  30FB  	MOVLW 0xFB
+0410  1283  	BCF STATUS, RP0
+0411  0507  	ANDWF gbl_portc, W
+0412  1683  	BSF STATUS, RP0
+0413  00B8  	MOVWF CompTempVar2240
+0414  3004  	MOVLW 0x04
+0415  0438  	IORWF CompTempVar2240, W
+0416  1283  	BCF STATUS, RP0
+0417  0087  	MOVWF gbl_portc
+
+		else
+0418  2C1D  	GOTO	label79
+041D        label79
+
+			portc = portc & 0xFB;
+0419  30FB  	MOVLW 0xFB
+041A  1283  	BCF STATUS, RP0
+041B  0507  	ANDWF gbl_portc, W
+041C  0087  	MOVWF gbl_portc
+
+
+		//data_fope
+		//Output: dat_fope -> C4
+		trisc = trisc & 0xEF;
+041D  30EF  	MOVLW 0xEF
+041E  1683  	BSF STATUS, RP0
+041F  0507  	ANDWF gbl_trisc, W
+0420  0087  	MOVWF gbl_trisc
+
+		if ((FCV_DAT_FOPE))
+0421  1CFC  	BTFSS gbl_FCV_DAT_FOPE,1
+0422  2C2D  	GOTO	label80
+042D        label80
+
+			portc = (portc & 0xEF) | 0x10;
+0423  30EF  	MOVLW 0xEF
+0424  1283  	BCF STATUS, RP0
+0425  0507  	ANDWF gbl_portc, W
+0426  1683  	BSF STATUS, RP0
+0427  00B8  	MOVWF CompTempVar2241
+0428  3010  	MOVLW 0x10
+0429  0438  	IORWF CompTempVar2241, W
+042A  1283  	BCF STATUS, RP0
+042B  0087  	MOVWF gbl_portc
+
+		else
+042C  2C31  	GOTO	label81
+0431        label81
+
+			portc = portc & 0xEF;
+042D  30EF  	MOVLW 0xEF
+042E  1283  	BCF STATUS, RP0
+042F  0507  	ANDWF gbl_portc, W
+0430  0087  	MOVWF gbl_portc
+
+
+		//data_score
+		//Output: dat_score -> C3
+		trisc = trisc & 0xF7;
+0431  30F7  	MOVLW 0xF7
+0432  1683  	BSF STATUS, RP0
+0433  0507  	ANDWF gbl_trisc, W
+0434  0087  	MOVWF gbl_trisc
+
+		if ((FCV_DAT_SCORE))
+0435  1C7C  	BTFSS gbl_FCV_DAT_SCORE,0
+0436  2C41  	GOTO	label82
+0441        label82
+
+			portc = (portc & 0xF7) | 0x08;
+0437  30F7  	MOVLW 0xF7
+0438  1283  	BCF STATUS, RP0
+0439  0507  	ANDWF gbl_portc, W
+043A  1683  	BSF STATUS, RP0
+043B  00B8  	MOVWF CompTempVar2242
+043C  3008  	MOVLW 0x08
+043D  0438  	IORWF CompTempVar2242, W
+043E  1283  	BCF STATUS, RP0
+043F  0087  	MOVWF gbl_portc
+
+		else
+0440  2C45  	GOTO	label83
+0445        label83
+
+			portc = portc & 0xF7;
+0441  30F7  	MOVLW 0xF7
+0442  1283  	BCF STATUS, RP0
+0443  0507  	ANDWF gbl_portc, W
+0444  0087  	MOVWF gbl_portc
+
+
+		//clk
+		//Output: 1 -> C0
+		trisc = trisc & 0xFE;
+0445  30FE  	MOVLW 0xFE
+0446  1683  	BSF STATUS, RP0
+0447  0507  	ANDWF gbl_trisc, W
+0448  0087  	MOVWF gbl_trisc
+
+		if ((1))
+			portc = (portc & 0xFE) | 0x01;
+0449  30FE  	MOVLW 0xFE
+044A  1283  	BCF STATUS, RP0
+044B  0507  	ANDWF gbl_portc, W
+044C  1683  	BSF STATUS, RP0
+044D  00B8  	MOVWF CompTempVar2243
+044E  3001  	MOVLW 0x01
+044F  0438  	IORWF CompTempVar2243, W
+0450  1283  	BCF STATUS, RP0
+0451  0087  	MOVWF gbl_portc
+
+		else
+			portc = portc & 0xFE;
+
+		//Calculation
+		//Calculation:
+		//  bits_time = bits_time >> 1
+		//  bits_fope = bits_fope >> 1
+		//  bits_score = bits_score >> 1
+		FCV_BITS_TIME = FCV_BITS_TIME >> 1;
+0452  1683  	BSF STATUS, RP0
+0453  08AD  	MOVF gbl_FCV_BITS_TIME, F
+0454  1003  	BCF STATUS,C
+0455  0CAD  	RRF gbl_FCV_BITS_TIME, F
+
+		FCV_BITS_FOPE = FCV_BITS_FOPE >> 1;
+0456  08AC  	MOVF gbl_FCV_BITS_FOPE, F
+0457  1003  	BCF STATUS,C
+0458  0CAC  	RRF gbl_FCV_BITS_FOPE, F
+
+		FCV_BITS_SCORE = FCV_BITS_SCORE >> 1;
+0459  08A0  	MOVF gbl_FCV_BITS_SCORE, F
+045A  1003  	BCF STATUS,C
+045B  0CA0  	RRF gbl_FCV_BITS_SCORE, F
+
+
+
+	}
+
+	//reg
+	//Output: 1 -> C1
+	trisc = trisc & 0xFD;
+045E  30FD  	MOVLW 0xFD
+045F  0507  	ANDWF gbl_trisc, W
+0460  0087  	MOVWF gbl_trisc
+
+	if ((1))
+		portc = (portc & 0xFD) | 0x02;
+0461  30FD  	MOVLW 0xFD
+0462  1283  	BCF STATUS, RP0
+0463  0507  	ANDWF gbl_portc, W
+0464  1683  	BSF STATUS, RP0
+0465  00B8  	MOVWF CompTempVar2247
+0466  3002  	MOVLW 0x02
+0467  0438  	IORWF CompTempVar2247, W
+0468  1283  	BCF STATUS, RP0
+0469  0087  	MOVWF gbl_portc
+
+	else
+		portc = portc & 0xFD;
+
+	//reg
+	//Output: 0 -> C1
+	trisc = trisc & 0xFD;
+046A  30FD  	MOVLW 0xFD
+046B  1683  	BSF STATUS, RP0
+046C  0507  	ANDWF gbl_trisc, W
+046D  0087  	MOVWF gbl_trisc
+
+	if ((0))
+		portc = (portc & 0xFD) | 0x02;
+	else
+		portc = portc & 0xFD;
+046E  30FD  	MOVLW 0xFD
+046F  1283  	BCF STATUS, RP0
+0470  0507  	ANDWF gbl_portc, W
+0471  0087  	MOVWF gbl_portc
+
+
+}
+0472  0008  	RETURN
+
+
+
+void FCM_test_macro()
+{
+
+	//Calculation
+	//Calculation:
+	//  digit_score = home_score_tens
+	FCV_DIGIT_SCORE = FCV_HOME_SCORE_TENS;
+
+	//Call Macro
+	//Call Macro: data_bank()
+	FCM_data_bank();
+
+	//clk
+	//Output: 0 -> C0
+	trisc = trisc & 0xFE;
+	if ((0))
+		portc = (portc & 0xFE) | 0x01;
+	else
+		portc = portc & 0xFE;
+
+	//Loop
+	//Loop: Loop 8 times
+	for (FCLV_LOOP5=0; FCLV_LOOP5<8; FCLV_LOOP5++)
+	{
+
+		//clk
+		//Output: 0 -> C0
+		trisc = trisc & 0xFE;
+		if ((0))
+			portc = (portc & 0xFE) | 0x01;
+		else
+			portc = portc & 0xFE;
+
+		//Calculation
+		//Calculation:
+		//  dat_time = bits_time AND 1
+		//  dat_fope = bits_fope AND 1
+		//  dat_score = bits_score AND 1
+		FCV_DAT_TIME = FCV_BITS_TIME & 1;
+		FCV_DAT_FOPE = FCV_BITS_FOPE & 1;
+		FCV_DAT_SCORE = FCV_BITS_SCORE & 1;
+
+		//data_score
+		//Output: dat_score -> C3
+		trisc = trisc & 0xF7;
+		if ((FCV_DAT_SCORE))
+			portc = (portc & 0xF7) | 0x08;
+		else
+			portc = portc & 0xF7;
+
+		//clk
+		//Output: 1 -> C0
+		trisc = trisc & 0xFE;
+		if ((1))
+			portc = (portc & 0xFE) | 0x01;
+		else
+			portc = portc & 0xFE;
+
+		//Calculation
+		//Calculation:
+		//  bits_time = bits_time >> 1
+		//  bits_fope = bits_fope >> 1
+		//  bits_score = bits_score >> 1
+		FCV_BITS_TIME = FCV_BITS_TIME >> 1;
+		FCV_BITS_FOPE = FCV_BITS_FOPE >> 1;
+		FCV_BITS_SCORE = FCV_BITS_SCORE >> 1;
+
+
+	}
+
+	//Calculation
+	//Calculation:
+	//  digit_score = home_score_ones
+	FCV_DIGIT_SCORE = FCV_HOME_SCORE_ONES;
+
+	//Call Macro
+	//Call Macro: data_bank()
+	FCM_data_bank();
+
+	//clk
+	//Output: 0 -> C0
+	trisc = trisc & 0xFE;
+	if ((0))
+		portc = (portc & 0xFE) | 0x01;
+	else
+		portc = portc & 0xFE;
+
+	//Loop
+	//Loop: Loop 8 times
+	for (FCLV_LOOP6=0; FCLV_LOOP6<8; FCLV_LOOP6++)
+	{
+
+		//clk
+		//Output: 0 -> C0
+		trisc = trisc & 0xFE;
+		if ((0))
+			portc = (portc & 0xFE) | 0x01;
+		else
+			portc = portc & 0xFE;
+
+		//Calculation
+		//Calculation:
+		//  dat_time = bits_time AND 1
+		//  dat_fope = bits_fope AND 1
+		//  dat_score = bits_score AND 1
+		FCV_DAT_TIME = FCV_BITS_TIME & 1;
+		FCV_DAT_FOPE = FCV_BITS_FOPE & 1;
+		FCV_DAT_SCORE = FCV_BITS_SCORE & 1;
+
+		//data_score
+		//Output: dat_score -> C3
+		trisc = trisc & 0xF7;
+		if ((FCV_DAT_SCORE))
+			portc = (portc & 0xF7) | 0x08;
+		else
+			portc = portc & 0xF7;
+
+		//clk
+		//Output: 1 -> C0
+		trisc = trisc & 0xFE;
+		if ((1))
+			portc = (portc & 0xFE) | 0x01;
+		else
+			portc = portc & 0xFE;
+
+		//Calculation
+		//Calculation:
+		//  bits_time = bits_time >> 1
+		//  bits_fope = bits_fope >> 1
+		//  bits_score = bits_score >> 1
+		FCV_BITS_TIME = FCV_BITS_TIME >> 1;
+		FCV_BITS_FOPE = FCV_BITS_FOPE >> 1;
+		FCV_BITS_SCORE = FCV_BITS_SCORE >> 1;
+
+
+	}
+
+	//Calculation
+	//Calculation:
+	//  digit_score = away_score_tens
+	FCV_DIGIT_SCORE = FCV_AWAY_SCORE_TENS;
+
+	//Call Macro
+	//Call Macro: data_bank()
+	FCM_data_bank();
+
+	//clk
+	//Output: 0 -> C0
+	trisc = trisc & 0xFE;
+	if ((0))
+		portc = (portc & 0xFE) | 0x01;
+	else
+		portc = portc & 0xFE;
+
+	//Loop
+	//Loop: Loop 8 times
+	for (FCLV_LOOP7=0; FCLV_LOOP7<8; FCLV_LOOP7++)
+	{
+
+		//clk
+		//Output: 0 -> C0
+		trisc = trisc & 0xFE;
+		if ((0))
+			portc = (portc & 0xFE) | 0x01;
+		else
+			portc = portc & 0xFE;
+
+		//Calculation
+		//Calculation:
+		//  dat_time = bits_time AND 1
+		//  dat_fope = bits_fope AND 1
+		//  dat_score = bits_score AND 1
+		FCV_DAT_TIME = FCV_BITS_TIME & 1;
+		FCV_DAT_FOPE = FCV_BITS_FOPE & 1;
+		FCV_DAT_SCORE = FCV_BITS_SCORE & 1;
+
+		//data_score
+		//Output: dat_score -> C3
+		trisc = trisc & 0xF7;
+		if ((FCV_DAT_SCORE))
+			portc = (portc & 0xF7) | 0x08;
+		else
+			portc = portc & 0xF7;
+
+		//clk
+		//Output: 1 -> C0
+		trisc = trisc & 0xFE;
+		if ((1))
+			portc = (portc & 0xFE) | 0x01;
+		else
+			portc = portc & 0xFE;
+
+		//Calculation
+		//Calculation:
+		//  bits_time = bits_time >> 1
+		//  bits_fope = bits_fope >> 1
+		//  bits_score = bits_score >> 1
+		FCV_BITS_TIME = FCV_BITS_TIME >> 1;
+		FCV_BITS_FOPE = FCV_BITS_FOPE >> 1;
+		FCV_BITS_SCORE = FCV_BITS_SCORE >> 1;
+
+
+	}
+
+	//Calculation
+	//Calculation:
+	//  digit_score = away_score_ones
+	FCV_DIGIT_SCORE = FCV_AWAY_SCORE_ONES;
+
+	//Call Macro
+	//Call Macro: data_bank()
+	FCM_data_bank();
+
+	//clk
+	//Output: 0 -> C0
+	trisc = trisc & 0xFE;
+	if ((0))
+		portc = (portc & 0xFE) | 0x01;
+	else
+		portc = portc & 0xFE;
+
+	//Loop
+	//Loop: Loop 8 times
+	for (FCLV_LOOP8=0; FCLV_LOOP8<8; FCLV_LOOP8++)
+	{
+
+		//clk
+		//Output: 0 -> C0
+		trisc = trisc & 0xFE;
+		if ((0))
+			portc = (portc & 0xFE) | 0x01;
+		else
+			portc = portc & 0xFE;
+
+		//Calculation
+		//Calculation:
+		//  dat_time = bits_time AND 1
+		//  dat_fope = bits_fope AND 1
+		//  dat_score = bits_score AND 1
+		FCV_DAT_TIME = FCV_BITS_TIME & 1;
+		FCV_DAT_FOPE = FCV_BITS_FOPE & 1;
+		FCV_DAT_SCORE = FCV_BITS_SCORE & 1;
+
+		//data_score
+		//Output: dat_score -> C3
+		trisc = trisc & 0xF7;
+		if ((FCV_DAT_SCORE))
+			portc = (portc & 0xF7) | 0x08;
+		else
+			portc = portc & 0xF7;
+
+		//clk
+		//Output: 1 -> C0
+		trisc = trisc & 0xFE;
+		if ((1))
+			portc = (portc & 0xFE) | 0x01;
+		else
+			portc = portc & 0xFE;
+
+		//Calculation
+		//Calculation:
+		//  bits_time = bits_time >> 1
+		//  bits_fope = bits_fope >> 1
+		//  bits_score = bits_score >> 1
+		FCV_BITS_TIME = FCV_BITS_TIME >> 1;
+		FCV_BITS_FOPE = FCV_BITS_FOPE >> 1;
+		FCV_BITS_SCORE = FCV_BITS_SCORE >> 1;
+
+
+	}
+
+	//reg
+	//Output: 1 -> C1
+	trisc = trisc & 0xFD;
+	if ((1))
+		portc = (portc & 0xFD) | 0x02;
+	else
+		portc = portc & 0xFD;
+
+	//reg
+	//Output: 0 -> C1
+	trisc = trisc & 0xFD;
+	if ((0))
+		portc = (portc & 0xFD) | 0x02;
+	else
+		portc = portc & 0xFD;
+
+}
+
+
+
+void main()
+
+{
+	//Initialization
+	ansel = 0;
+059D  1683  	BSF STATUS, RP0
+059E  1703  	BSF STATUS, RP1
+059F  0188  	CLRF gbl_ansel
+
+anselh = 0;
+05A0  0189  	CLRF gbl_anselh
+
+
+	
+		RS232_1_UART_Init( );		//Call initialise function
+05A1  2206  	CALL FC_CAL_UAR_00054
+
+
+
+	//Interrupt initialization code
+	option_reg = 0xC0;
+05A2  30C0  	MOVLW 0xC0
+05A3  0081  	MOVWF gbl_option_reg
+
+
+
+	//Output
+	//Output: 0 -> A1
+	trisa = trisa & 0xFD;
+05A4  30FD  	MOVLW 0xFD
+05A5  0505  	ANDWF gbl_trisa, W
+05A6  0085  	MOVWF gbl_trisa
+
+	if ((0))
+		porta = (porta & 0xFD) | 0x02;
+	else
+		porta = porta & 0xFD;
+05A7  30FD  	MOVLW 0xFD
+05A8  1283  	BCF STATUS, RP0
+05A9  0505  	ANDWF gbl_porta, W
+05AA  0085  	MOVWF gbl_porta
+
+
+	//clk
+	//Output: 0 -> C0
+	trisc = trisc & 0xFE;
+05AB  30FE  	MOVLW 0xFE
+05AC  1683  	BSF STATUS, RP0
+05AD  0507  	ANDWF gbl_trisc, W
+05AE  0087  	MOVWF gbl_trisc
+
+	if ((0))
+		portc = (portc & 0xFE) | 0x01;
+	else
+		portc = portc & 0xFE;
+05AF  30FE  	MOVLW 0xFE
+05B0  1283  	BCF STATUS, RP0
+05B1  0507  	ANDWF gbl_portc, W
+05B2  0087  	MOVWF gbl_portc
+
+
+	//reg
+	//Output: 0 -> C1
+	trisc = trisc & 0xFD;
+05B3  30FD  	MOVLW 0xFD
+05B4  1683  	BSF STATUS, RP0
+05B5  0507  	ANDWF gbl_trisc, W
+05B6  0087  	MOVWF gbl_trisc
+
+	if ((0))
+		portc = (portc & 0xFD) | 0x02;
+	else
+		portc = portc & 0xFD;
+05B7  30FD  	MOVLW 0xFD
+05B8  1283  	BCF STATUS, RP0
+05B9  0507  	ANDWF gbl_portc, W
+05BA  0087  	MOVWF gbl_portc
+
+
+	//Loop
+	//Loop: While 1
+	while (1)
+05BB        label100
+07EC  2DBB  	GOTO	label100
+
+	{
+
+		//Connection Point
+		//Connection Point: [A]: A
+FCC_Main_A:
+
+;
+
+		//Call Component Macro
+		//Call Component Macro: rx=ReceiveRS232Char(1)
+		FCV_RX = FCD_RS2320_ReceiveRS232Char(1);
+05BB  3001  	MOVLW 0x01
+05BC  1683  	BSF STATUS, RP0
+05BD  00B8  	MOVWF FCD_RS2320_0005B_arg_nTimeout
+05BE  2595  	CALL FCD_RS2320_0005B
+05BF  083A  	MOVF CompTempVarRet2298, W
+05C0  00A6  	MOVWF gbl_FCV_RX
+
+
+		//Decision
+		//Decision: rx = 'E'?
+		if (FCV_RX == 'E')
+05C1  0826  	MOVF gbl_FCV_RX, W
+05C2  3A45  	XORLW 0x45
+05C3  1D03  	BTFSS STATUS,Z
+05C4  2DD1  	GOTO	label101
+05D1        label101
+
+		{
+
+			//Output
+			//Output: 1 -> A1
+			trisa = trisa & 0xFD;
+05C5  30FD  	MOVLW 0xFD
+05C6  0505  	ANDWF gbl_trisa, W
+05C7  0085  	MOVWF gbl_trisa
+
+			if ((1))
+				porta = (porta & 0xFD) | 0x02;
+05C8  30FD  	MOVLW 0xFD
+05C9  1283  	BCF STATUS, RP0
+05CA  0505  	ANDWF gbl_porta, W
+05CB  1683  	BSF STATUS, RP0
+05CC  00B8  	MOVWF CompTempVar2303
+05CD  3002  	MOVLW 0x02
+05CE  0438  	IORWF CompTempVar2303, W
+05CF  1283  	BCF STATUS, RP0
+05D0  0085  	MOVWF gbl_porta
+
+			else
+				porta = porta & 0xFD;
+
+		// } else {
+
+		}
+
+		//Decision
+		//Decision: rx = 'F'?
+		if (FCV_RX == 'F')
+05D1  1683  	BSF STATUS, RP0
+05D2  0826  	MOVF gbl_FCV_RX, W
+05D3  3A46  	XORLW 0x46
+05D4  1D03  	BTFSS STATUS,Z
+05D5  2DDD  	GOTO	label102
+05DD        label102
+
+		{
+
+			//Output
+			//Output: 0 -> A1
+			trisa = trisa & 0xFD;
+05D6  30FD  	MOVLW 0xFD
+05D7  0505  	ANDWF gbl_trisa, W
+05D8  0085  	MOVWF gbl_trisa
+
+			if ((0))
+				porta = (porta & 0xFD) | 0x02;
+			else
+				porta = porta & 0xFD;
+05D9  30FD  	MOVLW 0xFD
+05DA  1283  	BCF STATUS, RP0
+05DB  0505  	ANDWF gbl_porta, W
+05DC  0085  	MOVWF gbl_porta
+
+
+		// } else {
+
+		}
+
+		//Decision
+		//Decision: rx = 'A'?
+		if (FCV_RX == 'A')
+05DD  1683  	BSF STATUS, RP0
+05DE  0826  	MOVF gbl_FCV_RX, W
+05DF  3A41  	XORLW 0x41
+05E0  1D03  	BTFSS STATUS,Z
+05E1  2F6F  	GOTO	label105
+
+		{
+
+			//Call Component Macro
+			//Call Component Macro: rx=ReceiveRS232Char(1)
+			FCV_RX = FCD_RS2320_ReceiveRS232Char(1);
+05E2  3001  	MOVLW 0x01
+05E3  00B8  	MOVWF FCD_RS2320_0005B_arg_nTimeout
+05E4  2595  	CALL FCD_RS2320_0005B
+05E5  083A  	MOVF CompTempVarRet2298, W
+05E6  00A6  	MOVWF gbl_FCV_RX
+
+
+			//Decision
+			//Decision: rx = 'B'?
+			if (FCV_RX == 'B')
+05E7  0826  	MOVF gbl_FCV_RX, W
+05E8  3A42  	XORLW 0x42
+05E9  1D03  	BTFSS STATUS,Z
+05EA  2F6F  	GOTO	label105
+
+			{
+
+				//Call Component Macro
+				//Call Component Macro: rcv=ReceiveRS232String(1, 15)
+				FCD_RS2320_ReceiveRS232String(FCV_RCV,FCSZ_RCV, 1, 15);
+05EB  3000  	MOVLW HIGH(gbl_FCV_RCV+D'0')
+05EC  00B9  	MOVWF FCD_RS2320_0005C_arg_FCR_RETVAL+D'1'
+05ED  3020  	MOVLW LOW(gbl_FCV_RCV+D'0')
+05EE  00B8  	MOVWF FCD_RS2320_0005C_arg_FCR_RETVAL
+05EF  300F  	MOVLW 0x0F
+05F0  00BA  	MOVWF FCD_RS2320_0005C_arg_FCR_R_0005D
+05F1  3001  	MOVLW 0x01
+05F2  00BB  	MOVWF FCD_RS2320_0005C_arg_nTimeout
+05F3  300F  	MOVLW 0x0F
+05F4  00BC  	MOVWF FCD_RS2320_0005C_arg_NumBytes
+05F5  255B  	CALL FCD_RS2320_0005C
+
+
+				//Decision
+				//Decision: home_score = 10?
+				if (FCV_HOME_SCORE == 10)
+05F6  1283  	BCF STATUS, RP0
+05F7  084F  	MOVF gbl_FCV_HOME_SCORE, W
+05F8  3C0A  	SUBLW 0x0A
+05F9  1D03  	BTFSS STATUS,Z
+05FA  2E05  	GOTO	label103
+05FB  0850  	MOVF gbl_FCV_HOME_SCORE+D'1', W
+05FC  3C00  	SUBLW 0x00
+05FD  1D03  	BTFSS STATUS,Z
+05FE  2E05  	GOTO	label103
+05FF  0851  	MOVF gbl_FCV_HOME_SCORE+D'2', W
+0600  3C00  	SUBLW 0x00
+0601  1D03  	BTFSS STATUS,Z
+0602  2E05  	GOTO	label103
+0603  0852  	MOVF gbl_FCV_HOME_SCORE+D'3', W
+0604  3C00  	SUBLW 0x00
+0605        label103
+
+				{
+
+				// } else {
+
+				}
+
+				//Calculation
+				//Calculation:
+				//  string_time = Right$ (rcv,15)
+				//  time = StringToInt$ (string_time)
+				//  min = time / 100
+				//  sec = time % 100
+				//  string_fope = Right$ (rcv,11)
+				//  fope = StringToInt$ (string_fope)
+				//  home_foul = fope / 100
+				//  away_foul = fope % 10
+				//  period = (fope % 100) / 10
+				//  string_home = Right$ (rcv,8)
+				//  home_score = StringToInt$ (string_home)
+				//  string_away = Right$ (rcv,5)
+				//  away_score = StringToInt$ (string_away)
+				//  end = Right$ (rcv,2)
+				FCI_RIGHTSTRING(FCV_RCV, FCSZ_RCV, 15, FCV_STRING_TIME,FCSZ_STRING_TIME);
+0605  3000  	MOVLW HIGH(gbl_FCV_RCV+D'0')
+0606  1683  	BSF STATUS, RP0
+0607  00B9  	MOVWF FCI_RIGHTS_00048_arg_sSrc+D'1'
+0608  3020  	MOVLW LOW(gbl_FCV_RCV+D'0')
+0609  00B8  	MOVWF FCI_RIGHTS_00048_arg_sSrc
+060A  300F  	MOVLW 0x0F
+060B  00BA  	MOVWF FCI_RIGHTS_00048_arg_iSrc_len
+060C  00BB  	MOVWF FCI_RIGHTS_00048_arg_iCount
+060D  3000  	MOVLW HIGH(gbl_FCV_STRING_TIME+D'0')
+060E  00BD  	MOVWF FCI_RIGHTS_00048_arg_sDst+D'1'
+060F  304B  	MOVLW LOW(gbl_FCV_STRING_TIME+D'0')
+0610  00BC  	MOVWF FCI_RIGHTS_00048_arg_sDst
+0611  3004  	MOVLW 0x04
+0612  00BE  	MOVWF FCI_RIGHTS_00048_arg_iDst_len
+0613  250A  	CALL FCI_RIGHTS_00048
+
+				FCV_TIME = FCI_STRING_TO_INT(FCV_STRING_TIME, FCSZ_STRING_TIME);
+0614  3000  	MOVLW HIGH(gbl_FCV_STRING_TIME+D'0')
+0615  00B9  	MOVWF FCI_STRING_0004F_arg_String+D'1'
+0616  304B  	MOVLW LOW(gbl_FCV_STRING_TIME+D'0')
+0617  00B8  	MOVWF FCI_STRING_0004F_arg_String
+0618  3004  	MOVLW 0x04
+0619  00BA  	MOVWF FCI_STRING_0004F_arg_MSZ_String
+061A  2473  	CALL FCI_STRING_0004F
+061B  0842  	MOVF CompTempVarRet2063, W
+061C  1283  	BCF STATUS, RP0
+061D  00DB  	MOVWF gbl_FCV_TIME
+061E  1683  	BSF STATUS, RP0
+061F  0843  	MOVF CompTempVarRet2063+D'1', W
+0620  1283  	BCF STATUS, RP0
+0621  00DC  	MOVWF gbl_FCV_TIME+D'1'
+0622  1683  	BSF STATUS, RP0
+0623  0844  	MOVF CompTempVarRet2063+D'2', W
+0624  1283  	BCF STATUS, RP0
+0625  00DD  	MOVWF gbl_FCV_TIME+D'2'
+0626  1683  	BSF STATUS, RP0
+0627  0845  	MOVF CompTempVarRet2063+D'3', W
+0628  1283  	BCF STATUS, RP0
+0629  00DE  	MOVWF gbl_FCV_TIME+D'3'
+
+				FCV_MIN = FCV_TIME / 100;
+062A  085B  	MOVF gbl_FCV_TIME, W
+062B  1683  	BSF STATUS, RP0
+062C  00C0  	MOVWF __div_32_3_00001_arg_a
+062D  1283  	BCF STATUS, RP0
+062E  085C  	MOVF gbl_FCV_TIME+D'1', W
+062F  1683  	BSF STATUS, RP0
+0630  00C1  	MOVWF __div_32_3_00001_arg_a+D'1'
+0631  1283  	BCF STATUS, RP0
+0632  085D  	MOVF gbl_FCV_TIME+D'2', W
+0633  1683  	BSF STATUS, RP0
+0634  00C2  	MOVWF __div_32_3_00001_arg_a+D'2'
+0635  1283  	BCF STATUS, RP0
+0636  085E  	MOVF gbl_FCV_TIME+D'3', W
+0637  1683  	BSF STATUS, RP0
+0638  00C3  	MOVWF __div_32_3_00001_arg_a+D'3'
+0639  3064  	MOVLW 0x64
+063A  00C4  	MOVWF __div_32_3_00001_arg_b
+063B  01C5  	CLRF __div_32_3_00001_arg_b+D'1'
+063C  01C6  	CLRF __div_32_3_00001_arg_b+D'2'
+063D  01C7  	CLRF __div_32_3_00001_arg_b+D'3'
+063E  21CD  	CALL __div_32_3_00001
+063F  084D  	MOVF CompTempVarRet210, W
+0640  00AF  	MOVWF gbl_FCV_MIN
+
+				FCV_SEC = FCV_TIME % 100;
+0641  1283  	BCF STATUS, RP0
+0642  085B  	MOVF gbl_FCV_TIME, W
+0643  1683  	BSF STATUS, RP0
+0644  00B8  	MOVWF __rem_32_3_00002_arg_a
+0645  1283  	BCF STATUS, RP0
+0646  085C  	MOVF gbl_FCV_TIME+D'1', W
+0647  1683  	BSF STATUS, RP0
+0648  00B9  	MOVWF __rem_32_3_00002_arg_a+D'1'
+0649  1283  	BCF STATUS, RP0
+064A  085D  	MOVF gbl_FCV_TIME+D'2', W
+064B  1683  	BSF STATUS, RP0
+064C  00BA  	MOVWF __rem_32_3_00002_arg_a+D'2'
+064D  1283  	BCF STATUS, RP0
+064E  085E  	MOVF gbl_FCV_TIME+D'3', W
+064F  1683  	BSF STATUS, RP0
+0650  00BB  	MOVWF __rem_32_3_00002_arg_a+D'3'
+0651  3064  	MOVLW 0x64
+0652  00BC  	MOVWF __rem_32_3_00002_arg_b
+0653  01BD  	CLRF __rem_32_3_00002_arg_b+D'1'
+0654  01BE  	CLRF __rem_32_3_00002_arg_b+D'2'
+0655  01BF  	CLRF __rem_32_3_00002_arg_b+D'3'
+0656  2183  	CALL __rem_32_3_00002
+0657  084D  	MOVF CompTempVarRet212, W
+0658  00AE  	MOVWF gbl_FCV_SEC
+
+				FCI_RIGHTSTRING(FCV_RCV, FCSZ_RCV, 11, FCV_STRING_FOPE,FCSZ_STRING_FOPE);
+0659  3000  	MOVLW HIGH(gbl_FCV_RCV+D'0')
+065A  00B9  	MOVWF FCI_RIGHTS_00048_arg_sSrc+D'1'
+065B  3020  	MOVLW LOW(gbl_FCV_RCV+D'0')
+065C  00B8  	MOVWF FCI_RIGHTS_00048_arg_sSrc
+065D  300F  	MOVLW 0x0F
+065E  00BA  	MOVWF FCI_RIGHTS_00048_arg_iSrc_len
+065F  300B  	MOVLW 0x0B
+0660  00BB  	MOVWF FCI_RIGHTS_00048_arg_iCount
+0661  3000  	MOVLW HIGH(gbl_FCV_STRING_FOPE+D'0')
+0662  00BD  	MOVWF FCI_RIGHTS_00048_arg_sDst+D'1'
+0663  3062  	MOVLW LOW(gbl_FCV_STRING_FOPE+D'0')
+0664  00BC  	MOVWF FCI_RIGHTS_00048_arg_sDst
+0665  3003  	MOVLW 0x03
+0666  00BE  	MOVWF FCI_RIGHTS_00048_arg_iDst_len
+0667  250A  	CALL FCI_RIGHTS_00048
+
+				FCV_FOPE = FCI_STRING_TO_INT(FCV_STRING_FOPE, FCSZ_STRING_FOPE);
+0668  3000  	MOVLW HIGH(gbl_FCV_STRING_FOPE+D'0')
+0669  00B9  	MOVWF FCI_STRING_0004F_arg_String+D'1'
+066A  3062  	MOVLW LOW(gbl_FCV_STRING_FOPE+D'0')
+066B  00B8  	MOVWF FCI_STRING_0004F_arg_String
+066C  3003  	MOVLW 0x03
+066D  00BA  	MOVWF FCI_STRING_0004F_arg_MSZ_String
+066E  2473  	CALL FCI_STRING_0004F
+066F  0842  	MOVF CompTempVarRet2063, W
+0670  1283  	BCF STATUS, RP0
+0671  00D7  	MOVWF gbl_FCV_FOPE
+0672  1683  	BSF STATUS, RP0
+0673  0843  	MOVF CompTempVarRet2063+D'1', W
+0674  1283  	BCF STATUS, RP0
+0675  00D8  	MOVWF gbl_FCV_FOPE+D'1'
+0676  1683  	BSF STATUS, RP0
+0677  0844  	MOVF CompTempVarRet2063+D'2', W
+0678  1283  	BCF STATUS, RP0
+0679  00D9  	MOVWF gbl_FCV_FOPE+D'2'
+067A  1683  	BSF STATUS, RP0
+067B  0845  	MOVF CompTempVarRet2063+D'3', W
+067C  1283  	BCF STATUS, RP0
+067D  00DA  	MOVWF gbl_FCV_FOPE+D'3'
+
+				FCV_HOME_FOUL = FCV_FOPE / 100;
+067E  0857  	MOVF gbl_FCV_FOPE, W
+067F  1683  	BSF STATUS, RP0
+0680  00C0  	MOVWF __div_32_3_00001_arg_a
+0681  1283  	BCF STATUS, RP0
+0682  0858  	MOVF gbl_FCV_FOPE+D'1', W
+0683  1683  	BSF STATUS, RP0
+0684  00C1  	MOVWF __div_32_3_00001_arg_a+D'1'
+0685  1283  	BCF STATUS, RP0
+0686  0859  	MOVF gbl_FCV_FOPE+D'2', W
+0687  1683  	BSF STATUS, RP0
+0688  00C2  	MOVWF __div_32_3_00001_arg_a+D'2'
+0689  1283  	BCF STATUS, RP0
+068A  085A  	MOVF gbl_FCV_FOPE+D'3', W
+068B  1683  	BSF STATUS, RP0
+068C  00C3  	MOVWF __div_32_3_00001_arg_a+D'3'
+068D  3064  	MOVLW 0x64
+068E  00C4  	MOVWF __div_32_3_00001_arg_b
+068F  01C5  	CLRF __div_32_3_00001_arg_b+D'1'
+0690  01C6  	CLRF __div_32_3_00001_arg_b+D'2'
+0691  01C7  	CLRF __div_32_3_00001_arg_b+D'3'
+0692  21CD  	CALL __div_32_3_00001
+0693  084D  	MOVF CompTempVarRet210, W
+0694  00A3  	MOVWF gbl_FCV_HOME_FOUL
+
+				FCV_AWAY_FOUL = FCV_FOPE % 10;
+0695  1283  	BCF STATUS, RP0
+0696  0857  	MOVF gbl_FCV_FOPE, W
+0697  1683  	BSF STATUS, RP0
+0698  00B8  	MOVWF __rem_32_3_00002_arg_a
+0699  1283  	BCF STATUS, RP0
+069A  0858  	MOVF gbl_FCV_FOPE+D'1', W
+069B  1683  	BSF STATUS, RP0
+069C  00B9  	MOVWF __rem_32_3_00002_arg_a+D'1'
+069D  1283  	BCF STATUS, RP0
+069E  0859  	MOVF gbl_FCV_FOPE+D'2', W
+069F  1683  	BSF STATUS, RP0
+06A0  00BA  	MOVWF __rem_32_3_00002_arg_a+D'2'
+06A1  1283  	BCF STATUS, RP0
+06A2  085A  	MOVF gbl_FCV_FOPE+D'3', W
+06A3  1683  	BSF STATUS, RP0
+06A4  00BB  	MOVWF __rem_32_3_00002_arg_a+D'3'
+06A5  300A  	MOVLW 0x0A
+06A6  00BC  	MOVWF __rem_32_3_00002_arg_b
+06A7  01BD  	CLRF __rem_32_3_00002_arg_b+D'1'
+06A8  01BE  	CLRF __rem_32_3_00002_arg_b+D'2'
+06A9  01BF  	CLRF __rem_32_3_00002_arg_b+D'3'
+06AA  2183  	CALL __rem_32_3_00002
+06AB  084D  	MOVF CompTempVarRet212, W
+06AC  00B1  	MOVWF gbl_FCV_AWAY_FOUL
+
+				FCV_PERIOD = (FCV_FOPE % 100) / 10;
+06AD  1283  	BCF STATUS, RP0
+06AE  0857  	MOVF gbl_FCV_FOPE, W
+06AF  1683  	BSF STATUS, RP0
+06B0  00B8  	MOVWF __rem_32_3_00002_arg_a
+06B1  1283  	BCF STATUS, RP0
+06B2  0858  	MOVF gbl_FCV_FOPE+D'1', W
+06B3  1683  	BSF STATUS, RP0
+06B4  00B9  	MOVWF __rem_32_3_00002_arg_a+D'1'
+06B5  1283  	BCF STATUS, RP0
+06B6  0859  	MOVF gbl_FCV_FOPE+D'2', W
+06B7  1683  	BSF STATUS, RP0
+06B8  00BA  	MOVWF __rem_32_3_00002_arg_a+D'2'
+06B9  1283  	BCF STATUS, RP0
+06BA  085A  	MOVF gbl_FCV_FOPE+D'3', W
+06BB  1683  	BSF STATUS, RP0
+06BC  00BB  	MOVWF __rem_32_3_00002_arg_a+D'3'
+06BD  3064  	MOVLW 0x64
+06BE  00BC  	MOVWF __rem_32_3_00002_arg_b
+06BF  01BD  	CLRF __rem_32_3_00002_arg_b+D'1'
+06C0  01BE  	CLRF __rem_32_3_00002_arg_b+D'2'
+06C1  01BF  	CLRF __rem_32_3_00002_arg_b+D'3'
+06C2  2183  	CALL __rem_32_3_00002
+06C3  084D  	MOVF CompTempVarRet212, W
+06C4  00C0  	MOVWF __div_32_3_00001_arg_a
+06C5  084E  	MOVF CompTempVarRet212+D'1', W
+06C6  00C1  	MOVWF __div_32_3_00001_arg_a+D'1'
+06C7  084F  	MOVF CompTempVarRet212+D'2', W
+06C8  00C2  	MOVWF __div_32_3_00001_arg_a+D'2'
+06C9  0850  	MOVF CompTempVarRet212+D'3', W
+06CA  00C3  	MOVWF __div_32_3_00001_arg_a+D'3'
+06CB  300A  	MOVLW 0x0A
+06CC  00C4  	MOVWF __div_32_3_00001_arg_b
+06CD  01C5  	CLRF __div_32_3_00001_arg_b+D'1'
+06CE  01C6  	CLRF __div_32_3_00001_arg_b+D'2'
+06CF  01C7  	CLRF __div_32_3_00001_arg_b+D'3'
+06D0  21CD  	CALL __div_32_3_00001
+06D1  084D  	MOVF CompTempVarRet210, W
+06D2  00FE  	MOVWF gbl_FCV_PERIOD
+
+				FCI_RIGHTSTRING(FCV_RCV, FCSZ_RCV, 8, FCV_STRING_HOME,FCSZ_STRING_HOME);
+06D3  3000  	MOVLW HIGH(gbl_FCV_RCV+D'0')
+06D4  00B9  	MOVWF FCI_RIGHTS_00048_arg_sSrc+D'1'
+06D5  3020  	MOVLW LOW(gbl_FCV_RCV+D'0')
+06D6  00B8  	MOVWF FCI_RIGHTS_00048_arg_sSrc
+06D7  300F  	MOVLW 0x0F
+06D8  00BA  	MOVWF FCI_RIGHTS_00048_arg_iSrc_len
+06D9  3008  	MOVLW 0x08
+06DA  00BB  	MOVWF FCI_RIGHTS_00048_arg_iCount
+06DB  3000  	MOVLW HIGH(gbl_FCV_STRING_HOME+D'0')
+06DC  00BD  	MOVWF FCI_RIGHTS_00048_arg_sDst+D'1'
+06DD  3065  	MOVLW LOW(gbl_FCV_STRING_HOME+D'0')
+06DE  00BC  	MOVWF FCI_RIGHTS_00048_arg_sDst
+06DF  3003  	MOVLW 0x03
+06E0  00BE  	MOVWF FCI_RIGHTS_00048_arg_iDst_len
+06E1  250A  	CALL FCI_RIGHTS_00048
+
+				FCV_HOME_SCORE = FCI_STRING_TO_INT(FCV_STRING_HOME, FCSZ_STRING_HOME);
+06E2  3000  	MOVLW HIGH(gbl_FCV_STRING_HOME+D'0')
+06E3  00B9  	MOVWF FCI_STRING_0004F_arg_String+D'1'
+06E4  3065  	MOVLW LOW(gbl_FCV_STRING_HOME+D'0')
+06E5  00B8  	MOVWF FCI_STRING_0004F_arg_String
+06E6  3003  	MOVLW 0x03
+06E7  00BA  	MOVWF FCI_STRING_0004F_arg_MSZ_String
+06E8  2473  	CALL FCI_STRING_0004F
+06E9  0842  	MOVF CompTempVarRet2063, W
+06EA  1283  	BCF STATUS, RP0
+06EB  00CF  	MOVWF gbl_FCV_HOME_SCORE
+06EC  1683  	BSF STATUS, RP0
+06ED  0843  	MOVF CompTempVarRet2063+D'1', W
+06EE  1283  	BCF STATUS, RP0
+06EF  00D0  	MOVWF gbl_FCV_HOME_SCORE+D'1'
+06F0  1683  	BSF STATUS, RP0
+06F1  0844  	MOVF CompTempVarRet2063+D'2', W
+06F2  1283  	BCF STATUS, RP0
+06F3  00D1  	MOVWF gbl_FCV_HOME_SCORE+D'2'
+06F4  1683  	BSF STATUS, RP0
+06F5  0845  	MOVF CompTempVarRet2063+D'3', W
+06F6  1283  	BCF STATUS, RP0
+06F7  00D2  	MOVWF gbl_FCV_HOME_SCORE+D'3'
+
+				FCI_RIGHTSTRING(FCV_RCV, FCSZ_RCV, 5, FCV_STRING_AWAY,FCSZ_STRING_AWAY);
+06F8  3000  	MOVLW HIGH(gbl_FCV_RCV+D'0')
+06F9  1683  	BSF STATUS, RP0
+06FA  00B9  	MOVWF FCI_RIGHTS_00048_arg_sSrc+D'1'
+06FB  3020  	MOVLW LOW(gbl_FCV_RCV+D'0')
+06FC  00B8  	MOVWF FCI_RIGHTS_00048_arg_sSrc
+06FD  300F  	MOVLW 0x0F
+06FE  00BA  	MOVWF FCI_RIGHTS_00048_arg_iSrc_len
+06FF  3005  	MOVLW 0x05
+0700  00BB  	MOVWF FCI_RIGHTS_00048_arg_iCount
+0701  3000  	MOVLW HIGH(gbl_FCV_STRING_AWAY+D'0')
+0702  00BD  	MOVWF FCI_RIGHTS_00048_arg_sDst+D'1'
+0703  305F  	MOVLW LOW(gbl_FCV_STRING_AWAY+D'0')
+0704  00BC  	MOVWF FCI_RIGHTS_00048_arg_sDst
+0705  3003  	MOVLW 0x03
+0706  00BE  	MOVWF FCI_RIGHTS_00048_arg_iDst_len
+0707  250A  	CALL FCI_RIGHTS_00048
+
+				FCV_AWAY_SCORE = FCI_STRING_TO_INT(FCV_STRING_AWAY, FCSZ_STRING_AWAY);
+0708  3000  	MOVLW HIGH(gbl_FCV_STRING_AWAY+D'0')
+0709  00B9  	MOVWF FCI_STRING_0004F_arg_String+D'1'
+070A  305F  	MOVLW LOW(gbl_FCV_STRING_AWAY+D'0')
+070B  00B8  	MOVWF FCI_STRING_0004F_arg_String
+070C  3003  	MOVLW 0x03
+070D  00BA  	MOVWF FCI_STRING_0004F_arg_MSZ_String
+070E  2473  	CALL FCI_STRING_0004F
+070F  0842  	MOVF CompTempVarRet2063, W
+0710  1283  	BCF STATUS, RP0
+0711  00C7  	MOVWF gbl_FCV_AWAY_SCORE
+0712  1683  	BSF STATUS, RP0
+0713  0843  	MOVF CompTempVarRet2063+D'1', W
+0714  1283  	BCF STATUS, RP0
+0715  00C8  	MOVWF gbl_FCV_AWAY_SCORE+D'1'
+0716  1683  	BSF STATUS, RP0
+0717  0844  	MOVF CompTempVarRet2063+D'2', W
+0718  1283  	BCF STATUS, RP0
+0719  00C9  	MOVWF gbl_FCV_AWAY_SCORE+D'2'
+071A  1683  	BSF STATUS, RP0
+071B  0845  	MOVF CompTempVarRet2063+D'3', W
+071C  1283  	BCF STATUS, RP0
+071D  00CA  	MOVWF gbl_FCV_AWAY_SCORE+D'3'
+
+				FCI_RIGHTSTRING(FCV_RCV, FCSZ_RCV, 2, FCV_END,FCSZ_END);
+071E  3000  	MOVLW HIGH(gbl_FCV_RCV+D'0')
+071F  1683  	BSF STATUS, RP0
+0720  00B9  	MOVWF FCI_RIGHTS_00048_arg_sSrc+D'1'
+0721  3020  	MOVLW LOW(gbl_FCV_RCV+D'0')
+0722  00B8  	MOVWF FCI_RIGHTS_00048_arg_sSrc
+0723  300F  	MOVLW 0x0F
+0724  00BA  	MOVWF FCI_RIGHTS_00048_arg_iSrc_len
+0725  3002  	MOVLW 0x02
+0726  00BB  	MOVWF FCI_RIGHTS_00048_arg_iCount
+0727  3000  	MOVLW HIGH(gbl_FCV_END+D'0')
+0728  00BD  	MOVWF FCI_RIGHTS_00048_arg_sDst+D'1'
+0729  306D  	MOVLW LOW(gbl_FCV_END+D'0')
+072A  00BC  	MOVWF FCI_RIGHTS_00048_arg_sDst
+072B  3002  	MOVLW 0x02
+072C  00BE  	MOVWF FCI_RIGHTS_00048_arg_iDst_len
+072D  250A  	CALL FCI_RIGHTS_00048
+
+
+				//Decision
+				//Decision: end[0] = 'C' && end[1] = 'D'?
+				if (FCV_END[0] == 'C' && FCV_END[1] == 'D')
+072E  1283  	BCF STATUS, RP0
+072F  086D  	MOVF gbl_FCV_END, W
+0730  3A43  	XORLW 0x43
+0731  1D03  	BTFSS STATUS,Z
+0732  2F53  	GOTO	label104
+0733  086E  	MOVF gbl_FCV_END+D'1', W
+0734  3A44  	XORLW 0x44
+0735  1D03  	BTFSS STATUS,Z
+0736  2F53  	GOTO	label104
+0753        label104
+
+				{
+
+					//Calculation
+					//Calculation:
+					//  stored_away_score = away_score
+					//  stored_home_score = home_score
+					//  stored_home_foul = home_foul
+					//  stored_away_foul = away_foul
+					//  stored_period = period
+					//  stored_min = min
+					//  stored_sec = sec
+					FCV_STORED_AWAY_SCORE = FCV_AWAY_SCORE;
+0737  0847  	MOVF gbl_FCV_AWAY_SCORE, W
+0738  00D3  	MOVWF gbl_FCV_STORED_AWAY_SCORE
+0739  0848  	MOVF gbl_FCV_AWAY_SCORE+D'1', W
+073A  00D4  	MOVWF gbl_FCV_STORED_AWAY_SCORE+D'1'
+073B  0849  	MOVF gbl_FCV_AWAY_SCORE+D'2', W
+073C  00D5  	MOVWF gbl_FCV_STORED_AWAY_SCORE+D'2'
+073D  084A  	MOVF gbl_FCV_AWAY_SCORE+D'3', W
+073E  00D6  	MOVWF gbl_FCV_STORED_AWAY_SCORE+D'3'
+
+					FCV_STORED_HOME_SCORE = FCV_HOME_SCORE;
+073F  084F  	MOVF gbl_FCV_HOME_SCORE, W
+0740  00C3  	MOVWF gbl_FCV_STORED_HOME_SCORE
+0741  0850  	MOVF gbl_FCV_HOME_SCORE+D'1', W
+0742  00C4  	MOVWF gbl_FCV_STORED_HOME_SCORE+D'1'
+0743  0851  	MOVF gbl_FCV_HOME_SCORE+D'2', W
+0744  00C5  	MOVWF gbl_FCV_STORED_HOME_SCORE+D'2'
+0745  0852  	MOVF gbl_FCV_HOME_SCORE+D'3', W
+0746  00C6  	MOVWF gbl_FCV_STORED_HOME_SCORE+D'3'
+
+					FCV_STORED_HOME_FOUL = FCV_HOME_FOUL;
+0747  1683  	BSF STATUS, RP0
+0748  0823  	MOVF gbl_FCV_HOME_FOUL, W
+0749  00A2  	MOVWF gbl_FCV_STORED_HOME_FOUL
+
+					FCV_STORED_AWAY_FOUL = FCV_AWAY_FOUL;
+074A  0831  	MOVF gbl_FCV_AWAY_FOUL, W
+074B  00B0  	MOVWF gbl_FCV_STORED_AWAY_FOUL
+
+					FCV_STORED_PERIOD = FCV_PERIOD;
+074C  087E  	MOVF gbl_FCV_PERIOD, W
+074D  00A5  	MOVWF gbl_FCV_STORED_PERIOD
+
+					FCV_STORED_MIN = FCV_MIN;
+074E  082F  	MOVF gbl_FCV_MIN, W
+074F  00FD  	MOVWF gbl_FCV_STORED_MIN
+
+					FCV_STORED_SEC = FCV_SEC;
+0750  082E  	MOVF gbl_FCV_SEC, W
+0751  00FA  	MOVWF gbl_FCV_STORED_SEC
+
+
+				} else {
+0752  2F6F  	GOTO	label105
+076F        label105
+
+
+					//Calculation
+					//Calculation:
+					//  away_score = stored_away_score
+					//  home_score = stored_home_score
+					//  home_foul = stored_home_foul
+					//  away_foul = stored_away_foul
+					//  period = stored_period
+					//  min = stored_min
+					//  sec = stored_sec
+					FCV_AWAY_SCORE = FCV_STORED_AWAY_SCORE;
+0753  0853  	MOVF gbl_FCV_STORED_AWAY_SCORE, W
+0754  00C7  	MOVWF gbl_FCV_AWAY_SCORE
+0755  0854  	MOVF gbl_FCV_STORED_AWAY_SCORE+D'1', W
+0756  00C8  	MOVWF gbl_FCV_AWAY_SCORE+D'1'
+0757  0855  	MOVF gbl_FCV_STORED_AWAY_SCORE+D'2', W
+0758  00C9  	MOVWF gbl_FCV_AWAY_SCORE+D'2'
+0759  0856  	MOVF gbl_FCV_STORED_AWAY_SCORE+D'3', W
+075A  00CA  	MOVWF gbl_FCV_AWAY_SCORE+D'3'
+
+					FCV_HOME_SCORE = FCV_STORED_HOME_SCORE;
+075B  0843  	MOVF gbl_FCV_STORED_HOME_SCORE, W
+075C  00CF  	MOVWF gbl_FCV_HOME_SCORE
+075D  0844  	MOVF gbl_FCV_STORED_HOME_SCORE+D'1', W
+075E  00D0  	MOVWF gbl_FCV_HOME_SCORE+D'1'
+075F  0845  	MOVF gbl_FCV_STORED_HOME_SCORE+D'2', W
+0760  00D1  	MOVWF gbl_FCV_HOME_SCORE+D'2'
+0761  0846  	MOVF gbl_FCV_STORED_HOME_SCORE+D'3', W
+0762  00D2  	MOVWF gbl_FCV_HOME_SCORE+D'3'
+
+					FCV_HOME_FOUL = FCV_STORED_HOME_FOUL;
+0763  1683  	BSF STATUS, RP0
+0764  0822  	MOVF gbl_FCV_STORED_HOME_FOUL, W
+0765  00A3  	MOVWF gbl_FCV_HOME_FOUL
+
+					FCV_AWAY_FOUL = FCV_STORED_AWAY_FOUL;
+0766  0830  	MOVF gbl_FCV_STORED_AWAY_FOUL, W
+0767  00B1  	MOVWF gbl_FCV_AWAY_FOUL
+
+					FCV_PERIOD = FCV_STORED_PERIOD;
+0768  0825  	MOVF gbl_FCV_STORED_PERIOD, W
+0769  00FE  	MOVWF gbl_FCV_PERIOD
+
+					FCV_MIN = FCV_STORED_MIN;
+076A  087D  	MOVF gbl_FCV_STORED_MIN, W
+076B  00AF  	MOVWF gbl_FCV_MIN
+
+					FCV_SEC = FCV_STORED_SEC;
+076C  087A  	MOVF gbl_FCV_STORED_SEC, W
+076D  00AE  	MOVWF gbl_FCV_SEC
+
+
+					//Goto Connection Point
+					//Goto Connection Point: [A]: A
+					goto FCC_Main_A;
+076E  2DBB  	GOTO	label100
+
+
+				}
+
+			// } else {
+
+			}
+
+		// } else {
+
+		}
+
+		//Calculation
+		//Calculation:
+		//  home_score_tens = home_score / 10
+		//  home_score_ones = home_score % 10
+		//  away_score_tens = away_score / 10
+		//  away_score_ones = away_score % 10
+		//  min_tens = min / 10
+		//  min_ones = min % 10
+		//  sec_tens = sec / 10
+		//  sec_ones = sec % 10
+		FCV_HOME_SCORE_TENS = FCV_HOME_SCORE / 10;
+076F  1283  	BCF STATUS, RP0
+0770  084F  	MOVF gbl_FCV_HOME_SCORE, W
+0771  1683  	BSF STATUS, RP0
+0772  00C0  	MOVWF __div_32_3_00001_arg_a
+0773  1283  	BCF STATUS, RP0
+0774  0850  	MOVF gbl_FCV_HOME_SCORE+D'1', W
+0775  1683  	BSF STATUS, RP0
+0776  00C1  	MOVWF __div_32_3_00001_arg_a+D'1'
+0777  1283  	BCF STATUS, RP0
+0778  0851  	MOVF gbl_FCV_HOME_SCORE+D'2', W
+0779  1683  	BSF STATUS, RP0
+077A  00C2  	MOVWF __div_32_3_00001_arg_a+D'2'
+077B  1283  	BCF STATUS, RP0
+077C  0852  	MOVF gbl_FCV_HOME_SCORE+D'3', W
+077D  1683  	BSF STATUS, RP0
+077E  00C3  	MOVWF __div_32_3_00001_arg_a+D'3'
+077F  300A  	MOVLW 0x0A
+0780  00C4  	MOVWF __div_32_3_00001_arg_b
+0781  01C5  	CLRF __div_32_3_00001_arg_b+D'1'
+0782  01C6  	CLRF __div_32_3_00001_arg_b+D'2'
+0783  01C7  	CLRF __div_32_3_00001_arg_b+D'3'
+0784  21CD  	CALL __div_32_3_00001
+0785  084D  	MOVF CompTempVarRet210, W
+0786  00AB  	MOVWF gbl_FCV_HOME_SCORE_TENS
+
+		FCV_HOME_SCORE_ONES = FCV_HOME_SCORE % 10;
+0787  1283  	BCF STATUS, RP0
+0788  084F  	MOVF gbl_FCV_HOME_SCORE, W
+0789  1683  	BSF STATUS, RP0
+078A  00B8  	MOVWF __rem_32_3_00002_arg_a
+078B  1283  	BCF STATUS, RP0
+078C  0850  	MOVF gbl_FCV_HOME_SCORE+D'1', W
+078D  1683  	BSF STATUS, RP0
+078E  00B9  	MOVWF __rem_32_3_00002_arg_a+D'1'
+078F  1283  	BCF STATUS, RP0
+0790  0851  	MOVF gbl_FCV_HOME_SCORE+D'2', W
+0791  1683  	BSF STATUS, RP0
+0792  00BA  	MOVWF __rem_32_3_00002_arg_a+D'2'
+0793  1283  	BCF STATUS, RP0
+0794  0852  	MOVF gbl_FCV_HOME_SCORE+D'3', W
+0795  1683  	BSF STATUS, RP0
+0796  00BB  	MOVWF __rem_32_3_00002_arg_a+D'3'
+0797  300A  	MOVLW 0x0A
+0798  00BC  	MOVWF __rem_32_3_00002_arg_b
+0799  01BD  	CLRF __rem_32_3_00002_arg_b+D'1'
+079A  01BE  	CLRF __rem_32_3_00002_arg_b+D'2'
+079B  01BF  	CLRF __rem_32_3_00002_arg_b+D'3'
+079C  2183  	CALL __rem_32_3_00002
+079D  084D  	MOVF CompTempVarRet212, W
+079E  00FB  	MOVWF gbl_FCV_HOME_SCORE_ONES
+
+		FCV_AWAY_SCORE_TENS = FCV_AWAY_SCORE / 10;
+079F  1283  	BCF STATUS, RP0
+07A0  0847  	MOVF gbl_FCV_AWAY_SCORE, W
+07A1  1683  	BSF STATUS, RP0
+07A2  00C0  	MOVWF __div_32_3_00001_arg_a
+07A3  1283  	BCF STATUS, RP0
+07A4  0848  	MOVF gbl_FCV_AWAY_SCORE+D'1', W
+07A5  1683  	BSF STATUS, RP0
+07A6  00C1  	MOVWF __div_32_3_00001_arg_a+D'1'
+07A7  1283  	BCF STATUS, RP0
+07A8  0849  	MOVF gbl_FCV_AWAY_SCORE+D'2', W
+07A9  1683  	BSF STATUS, RP0
+07AA  00C2  	MOVWF __div_32_3_00001_arg_a+D'2'
+07AB  1283  	BCF STATUS, RP0
+07AC  084A  	MOVF gbl_FCV_AWAY_SCORE+D'3', W
+07AD  1683  	BSF STATUS, RP0
+07AE  00C3  	MOVWF __div_32_3_00001_arg_a+D'3'
+07AF  300A  	MOVLW 0x0A
+07B0  00C4  	MOVWF __div_32_3_00001_arg_b
+07B1  01C5  	CLRF __div_32_3_00001_arg_b+D'1'
+07B2  01C6  	CLRF __div_32_3_00001_arg_b+D'2'
+07B3  01C7  	CLRF __div_32_3_00001_arg_b+D'3'
+07B4  21CD  	CALL __div_32_3_00001
+07B5  084D  	MOVF CompTempVarRet210, W
+07B6  00A1  	MOVWF gbl_FCV_AWAY_SCORE_TENS
+
+		FCV_AWAY_SCORE_ONES = FCV_AWAY_SCORE % 10;
+07B7  1283  	BCF STATUS, RP0
+07B8  0847  	MOVF gbl_FCV_AWAY_SCORE, W
+07B9  1683  	BSF STATUS, RP0
+07BA  00B8  	MOVWF __rem_32_3_00002_arg_a
+07BB  1283  	BCF STATUS, RP0
+07BC  0848  	MOVF gbl_FCV_AWAY_SCORE+D'1', W
+07BD  1683  	BSF STATUS, RP0
+07BE  00B9  	MOVWF __rem_32_3_00002_arg_a+D'1'
+07BF  1283  	BCF STATUS, RP0
+07C0  0849  	MOVF gbl_FCV_AWAY_SCORE+D'2', W
+07C1  1683  	BSF STATUS, RP0
+07C2  00BA  	MOVWF __rem_32_3_00002_arg_a+D'2'
+07C3  1283  	BCF STATUS, RP0
+07C4  084A  	MOVF gbl_FCV_AWAY_SCORE+D'3', W
+07C5  1683  	BSF STATUS, RP0
+07C6  00BB  	MOVWF __rem_32_3_00002_arg_a+D'3'
+07C7  300A  	MOVLW 0x0A
+07C8  00BC  	MOVWF __rem_32_3_00002_arg_b
+07C9  01BD  	CLRF __rem_32_3_00002_arg_b+D'1'
+07CA  01BE  	CLRF __rem_32_3_00002_arg_b+D'2'
+07CB  01BF  	CLRF __rem_32_3_00002_arg_b+D'3'
+07CC  2183  	CALL __rem_32_3_00002
+07CD  084D  	MOVF CompTempVarRet212, W
+07CE  00A9  	MOVWF gbl_FCV_AWAY_SCORE_ONES
+
+		FCV_MIN_TENS = FCV_MIN / 10;
+07CF  082F  	MOVF gbl_FCV_MIN, W
+07D0  00B8  	MOVWF __div_8_8_00000_arg_a
+07D1  300A  	MOVLW 0x0A
+07D2  00B9  	MOVWF __div_8_8_00000_arg_b
+07D3  21BC  	CALL __div_8_8_00000
+07D4  083C  	MOVF CompTempVarRet218, W
+07D5  00B3  	MOVWF gbl_FCV_MIN_TENS
+
+		FCV_MIN_ONES = FCV_MIN % 10;
+07D6  082F  	MOVF gbl_FCV_MIN, W
+07D7  00B8  	MOVWF __rem_8_8_00000_arg_a
+07D8  300A  	MOVLW 0x0A
+07D9  00B9  	MOVWF __rem_8_8_00000_arg_b
+07DA  2172  	CALL __rem_8_8_00000
+07DB  083C  	MOVF CompTempVarRet220, W
+07DC  00A4  	MOVWF gbl_FCV_MIN_ONES
+
+		FCV_SEC_TENS = FCV_SEC / 10;
+07DD  082E  	MOVF gbl_FCV_SEC, W
+07DE  00B8  	MOVWF __div_8_8_00000_arg_a
+07DF  300A  	MOVLW 0x0A
+07E0  00B9  	MOVWF __div_8_8_00000_arg_b
+07E1  21BC  	CALL __div_8_8_00000
+07E2  083C  	MOVF CompTempVarRet218, W
+07E3  00A8  	MOVWF gbl_FCV_SEC_TENS
+
+		FCV_SEC_ONES = FCV_SEC % 10;
+07E4  082E  	MOVF gbl_FCV_SEC, W
+07E5  00B8  	MOVWF __rem_8_8_00000_arg_a
+07E6  300A  	MOVLW 0x0A
+07E7  00B9  	MOVWF __rem_8_8_00000_arg_b
+07E8  2172  	CALL __rem_8_8_00000
+07E9  083C  	MOVF CompTempVarRet220, W
+07EA  00B2  	MOVWF gbl_FCV_SEC_ONES
+
+
+		//Call Macro
+		//Call Macro: register()
+		FCM_register();
+07EB  2215  	CALL FCM_regist_00052
+
+
+
+	}
+
+	mainendloop: goto mainendloop;
+}
+
+
+void MX_INTERRUPT_MACRO(void)
+
+{
+}
+084B  1283  	BCF STATUS, RP0
+084C  1303  	BCF STATUS, RP1
+084D  0E6A  	SWAPF Int1BContext+D'2', W
+084E  0084  	MOVWF FSR
+084F  0E69  	SWAPF Int1BContext+D'1', W
+0850  008A  	MOVWF PCLATH
+0851  0E68  	SWAPF Int1BContext, W
+0852  0083  	MOVWF STATUS
+0853  0EFF  	SWAPF Int1Context, F
+0854  0E7F  	SWAPF Int1Context, W
+0855  0009  	RETFIE
+
+
+
+
+
+/*********************************************************************
+ *                  Flowcode CAL UART File
+ *
+ * File: PIC_CAL_UART.c
+ *
+ * (c) 2011 Matrix Multimedia Ltd.
+ * http://www.matrixmultimedia.com
+ *
+ * Software License Agreement
+ *
+ * The software supplied herewith by Matrix Multimedia Ltd (the
+ * “Company”) for its Flowcode graphical programming language is
+ * intended and supplied to you, the Company’s customer, for use
+ * solely and exclusively on the Company's products. The software
+ * is owned by the Company, and is protected under applicable
+ * copyright laws. All rights are reserved. Any use in violation
+ * of the foregoing restrictions may subject the user to criminal
+ * sanctions under applicable laws, as well as to civil liability
+ * for the breach of the terms and conditions of this licence.
+ *
+ * THIS SOFTWARE IS PROVIDED IN AN “AS IS” CONDITION. NO WARRANTIES,
+ * WHETHER EXPRESS, IMPLIED OR STATUTORY, INCLUDING, BUT NOT LIMITED
+ * TO, IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+ * PARTICULAR PURPOSE APPLY TO THIS SOFTWARE. THE COMPANY SHALL NOT,
+ * IN ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL OR
+ * CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
+ *
+ * Changelog:
+ *
+ *  date  | by | description
+ * -------+----+-----------------------------------------------------
+ * 010911 | BR | Created
+ * 020911 | BR | Updated variables with typedef alternatives
+ * 011211 | BR | Converted to new dynamic defines mechanism
+ * 160112 | BR | Fixed issues with rx return type and low bauds on fast devices
+ * 020212 | ST | Added <MX_UART_2_PIE4> routing to account for differences in 16F and 18F devices with 2 UARTs
+ * 270212 | BR | Fixed a bug in the receive functionality
+ * 280212 | BR | Sorted out auto echo functionality
+ * 160412 | BR | Addition of HW change baud function
+ */
+
+
+
+#ifndef MX_UART_SW_DEFS
+	#define MX_UART_SW_DEFS
+
+	#ifdef _BOOSTC
+		#define INST_COUNT	45	//65 for lower speeds or 40 for higher speeds.
+	#endif
+	#ifdef HI_TECH_C
+		#define INST_COUNT	315
+	#endif
+
+	//Work out number of nops for software baud rate
+	#define MX_INSTRUCTION_SPEED 	(MX_CLK_SPEED / 4)
+	#define MX_OVERHEAD				(MX_INSTRUCTION_SPEED / INST_COUNT)
+	#define SW_OFFSET				(1000000 / MX_OVERHEAD)
+
+	//Work out software baud rates if required
+	#define SW_1200_BAUD	(832 - SW_OFFSET)
+	#define SW_2400_BAUD	(416 - SW_OFFSET)
+	#define SW_4800_BAUD	(208 - SW_OFFSET)
+	#define SW_9600_BAUD	(104 - SW_OFFSET)
+	#define SW_19200_BAUD	(52 - SW_OFFSET)
+	#define SW_31250_BAUD	(32 - SW_OFFSET)
+	#define SW_115200_BAUD	(8 - SW_OFFSET)
+#endif
+
+ #if defined(MX_UART_CHANNEL_1) && (MX_UART_NUM==1)
+	#if (MX_UART_CHANNEL_1 == 0)
+		#if (MX_UART_BAUD_1 == 1200)
+			#define MX_SOFT_BAUD_1	SW_1200_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 1200 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_1 == 2400)
+			#define MX_SOFT_BAUD_1	SW_2400_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 2400 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_1 == 4800)
+			#define MX_SOFT_BAUD_1	SW_4800_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 4800 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_1 == 9600)
+			#define MX_SOFT_BAUD_1	SW_9600_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 9600 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_1 == 19200)
+			#define MX_SOFT_BAUD_1	SW_19200_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 19200 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_1 == 31250)
+			#define MX_SOFT_BAUD_1	SW_31250_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 31250 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_1 == 115200)
+			#define MX_SOFT_BAUD_1	SW_115200_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 115200 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#ifndef MX_SOFT_BAUD_1
+			#error "UART Baud Rate not supported in Software Mode"
+		#endif
+	#else
+		#define MX_SOFT_BAUD_1	1
+		#define MX_HARD_BAUD_1	(((MX_CLK_SPEED / MX_UART_BAUD_1) - 16) / 16)
+		#define MX_HARD_SLOW_1	0
+
+		#if (MX_HARD_BAUD_1 > 255)
+			#undef MX_HARD_BAUD_1
+			#undef MX_HARD_SLOW_1
+			#define MX_HARD_BAUD_1	(((MX_CLK_SPEED / MX_UART_BAUD_1) - 16)	/ 64)
+			#define MX_HARD_SLOW_1	1
+		#endif
+
+	#endif
+ #endif
+ #if defined(MX_UART_CHANNEL_2) && (MX_UART_NUM==2)
+	#if (MX_UART_CHANNEL_2 == 0)
+		#if (MX_UART_BAUD_2 == 1200)
+			#define MX_SOFT_BAUD_2	SW_1200_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 1200 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_2 == 2400)
+			#define MX_SOFT_BAUD_2	SW_2400_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 2400 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_2 == 4800)
+			#define MX_SOFT_BAUD_2	SW_4800_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 4800 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_2 == 9600)
+			#define MX_SOFT_BAUD_2	SW_9600_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 9600 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_2 == 19200)
+			#define MX_SOFT_BAUD_2	SW_19200_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 19200 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_2 == 31250)
+			#define MX_SOFT_BAUD_2	SW_31250_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 31250 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_2 == 115200)
+			#define MX_SOFT_BAUD_2	SW_115200_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 115200 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#ifndef MX_SOFT_BAUD_2
+			#error "UART Baud Rate not supported in Software Mode"
+		#endif
+	#else
+		#define MX_SOFT_BAUD_2	1
+		#define MX_HARD_BAUD_2	(((MX_CLK_SPEED / MX_UART_BAUD_2) - 16) / 16)
+		#define MX_HARD_SLOW_2	0
+
+		#if (MX_HARD_BAUD_2 > 255)
+			#undef MX_HARD_BAUD_2
+			#undef MX_HARD_SLOW_2
+			#define MX_HARD_BAUD_2	(((MX_CLK_SPEED / MX_UART_BAUD_2) - 16)	/ 64)
+			#define MX_HARD_SLOW_2	1
+		#endif
+ 	#endif
+ #endif
+ #if defined(MX_UART_CHANNEL_3) && (MX_UART_NUM==3)
+	#if (MX_UART_CHANNEL_3 == 0)
+		#if (MX_UART_BAUD_3 == 1200)
+			#define MX_SOFT_BAUD_3	SW_1200_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 1200 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_3 == 2400)
+			#define MX_SOFT_BAUD_3	SW_2400_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 2400 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_3 == 4800)
+			#define MX_SOFT_BAUD_3	SW_4800_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 4800 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_3 == 9600)
+			#define MX_SOFT_BAUD_3	SW_9600_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 9600 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_3 == 19200)
+			#define MX_SOFT_BAUD_3	SW_19200_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 19200 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_3 == 31250)
+			#define MX_SOFT_BAUD_3	SW_31250_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 31250 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_3 == 115200)
+			#define MX_SOFT_BAUD_3	SW_115200_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 115200 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#ifndef MX_SOFT_BAUD_3
+			#error "UART Baud Rate not supported in Software Mode"
+		#endif
+	#else
+		#define MX_SOFT_BAUD_3	1
+		#define MX_HARD_BAUD_3	(((MX_CLK_SPEED / MX_UART_BAUD_3) - 16) / 16)
+		#define MX_HARD_SLOW_3	0
+
+		#if (MX_HARD_BAUD_3 > 255)
+			#undef MX_HARD_BAUD_3
+			#undef MX_HARD_SLOW_3
+			#define MX_HARD_BAUD_3	(((MX_CLK_SPEED / MX_UART_BAUD_3) - 16)	/ 64)
+			#define MX_HARD_SLOW_3	1
+		#endif
+	#endif
+ #endif
+ #if defined(MX_UART_CHANNEL_4) && (MX_UART_NUM==4)
+	#if (MX_UART_CHANNEL_4 == 0)
+		#if (MX_UART_BAUD_4 == 1200)
+			#define MX_SOFT_BAUD_4	SW_1200_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 1200 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_4 == 2400)
+			#define MX_SOFT_BAUD_4	SW_2400_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 2400 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_4 == 4800)
+			#define MX_SOFT_BAUD_4	SW_4800_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 4800 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_4 == 9600)
+			#define MX_SOFT_BAUD_4	SW_9600_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 9600 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_4 == 19200)
+			#define MX_SOFT_BAUD_4	SW_19200_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 19200 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_4 == 31250)
+			#define MX_SOFT_BAUD_4	SW_31250_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 31250 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#if (MX_UART_BAUD_4 == 115200)
+			#define MX_SOFT_BAUD_4	SW_115200_BAUD
+			#if (SW_OFFSET < 1)
+				#error "Software UART Baud Rate 115200 Not Available At This Clock Speed"
+			#endif
+		#endif
+		#ifndef MX_SOFT_BAUD_4
+			#error "UART Baud Rate not supported in Software Mode"
+		#endif
+	#else
+		#define MX_SOFT_BAUD_4	1
+		#define MX_HARD_BAUD_4	(((MX_CLK_SPEED / MX_UART_BAUD_4) - 16) / 16)
+		#define MX_HARD_SLOW_4	0
+
+		#if (MX_HARD_BAUD_4 > 255)
+			#undef MX_HARD_BAUD_4
+			#undef MX_HARD_SLOW_4
+			#define MX_HARD_BAUD_4	(((MX_CLK_SPEED / MX_UART_BAUD_4) - 16)	/ 64)
+			#define MX_HARD_SLOW_4	1
+		#endif
+	#endif
+ #endif
+
+
+//Hardware Baud update definitions
+#ifndef MX_HARD_BAUD_CHANGE_DEFS
+	#define MX_HARD_BAUD_CHANGE_DEFS
+
+	#define MX_HARD_BAUD_1200	(((MX_CLK_SPEED / 1200) - 16) / 16)
+	#if (MX_HARD_BAUD_1200 > 255)
+		#undef MX_HARD_BAUD_1200
+		#define MX_HARD_BAUD_1200	(((MX_CLK_SPEED / 1200) - 16) / 64)
+		#define MX_HARD_SLOW_1200	1
+	#else
+		#define MX_HARD_SLOW_1200	0
+	#endif
+
+	#define MX_HARD_BAUD_2400	(((MX_CLK_SPEED / 2400) - 16) / 16)
+	#if (MX_HARD_BAUD_2400 > 255)
+		#undef MX_HARD_BAUD_2400
+		#define MX_HARD_BAUD_2400	(((MX_CLK_SPEED / 2400) - 16) / 64)
+		#define MX_HARD_SLOW_2400	1
+	#else
+		#define MX_HARD_SLOW_2400	0
+	#endif
+
+	#define MX_HARD_BAUD_4800	(((MX_CLK_SPEED / 4800) - 16) / 16)
+	#if (MX_HARD_BAUD_4800 > 255)
+		#undef MX_HARD_BAUD_4800
+		#define MX_HARD_BAUD_4800	(((MX_CLK_SPEED / 4800) - 16) / 64)
+		#define MX_HARD_SLOW_4800	1
+	#else
+		#define MX_HARD_SLOW_4800	0
+	#endif
+
+	#define MX_HARD_BAUD_9600	(((MX_CLK_SPEED / 9600) - 16) / 16)
+	#if (MX_HARD_BAUD_9600 > 255)
+		#undef MX_HARD_BAUD_9600
+		#define MX_HARD_BAUD_9600	(((MX_CLK_SPEED / 9600) - 16) / 64)
+		#define MX_HARD_SLOW_9600	1
+	#else
+		#define MX_HARD_SLOW_9600	0
+	#endif
+
+	#define MX_HARD_BAUD_19200	(((MX_CLK_SPEED / 19200) - 16) / 16)
+	#if (MX_HARD_BAUD_19200 > 255)
+		#undef MX_HARD_BAUD_19200
+		#define MX_HARD_BAUD_19200	(((MX_CLK_SPEED / 19200) - 16) / 64)
+		#define MX_HARD_SLOW_19200	1
+	#else
+		#define MX_HARD_SLOW_19200	0
+	#endif
+
+	#define MX_HARD_BAUD_38400	(((MX_CLK_SPEED / 38400) - 16) / 16)
+	#if (MX_HARD_BAUD_38400 > 255)
+		#undef MX_HARD_BAUD_38400
+		#define MX_HARD_BAUD_38400	(((MX_CLK_SPEED / 38400) - 16) / 64)
+		#define MX_HARD_SLOW_38400	1
+	#else
+		#define MX_HARD_SLOW_38400	0
+	#endif
+
+	#define MX_HARD_BAUD_57600	(((MX_CLK_SPEED / 57600) - 16) / 16)
+	#if (MX_HARD_BAUD_57600 > 255)
+		#undef MX_HARD_BAUD_57600
+		#define MX_HARD_BAUD_57600	(((MX_CLK_SPEED / 57600) - 16) / 64)
+		#define MX_HARD_SLOW_57600	1
+	#else
+		#define MX_HARD_SLOW_57600	0
+	#endif
+
+	#define MX_HARD_BAUD_115200	(((MX_CLK_SPEED / 115200) - 16) / 16)
+	#if (MX_HARD_BAUD_115200 > 255)
+		#undef MX_HARD_BAUD_115200
+		#define MX_HARD_BAUD_115200	(((MX_CLK_SPEED / 115200) - 16) / 64)
+		#define MX_HARD_SLOW_115200	1
+	#else
+		#define MX_HARD_SLOW_115200	0
+	#endif
+#endif
+
+
+//Dynamic function naming based on defines and index number
+#define MX_UART_CHANNEL_X	CAL_APPEND(MX_UART_CHANNEL_, MX_UART_NUM)
+#define MX_UART_TX_PIN_X	CAL_APPEND(MX_UART_TX_PIN_, MX_UART_NUM)
+#define MX_UART_TX_PORT_X	CAL_APPEND(MX_UART_TX_PORT_, MX_UART_NUM)
+#define MX_UART_TX_TRIS_X	CAL_APPEND(MX_UART_TX_TRIS_, MX_UART_NUM)
+#define MX_UART_RX_PIN_X	CAL_APPEND(MX_UART_RX_PIN_, MX_UART_NUM)
+#define MX_UART_RX_PORT_X	CAL_APPEND(MX_UART_RX_PORT_, MX_UART_NUM)
+#define MX_UART_RX_TRIS_X	CAL_APPEND(MX_UART_RX_TRIS_, MX_UART_NUM)
+#define MX_UART_FLOWEN_X	CAL_APPEND(MX_UART_FLOWEN_, MX_UART_NUM)
+#define MX_UART_CTS_PIN_X	CAL_APPEND(MX_UART_CTS_PIN_, MX_UART_NUM)
+#define MX_UART_CTS_PORT_X	CAL_APPEND(MX_UART_CTS_PORT_, MX_UART_NUM)
+#define MX_UART_CTS_TRIS_X	CAL_APPEND(MX_UART_CTS_TRIS_, MX_UART_NUM)
+#define MX_UART_RTS_PIN_X	CAL_APPEND(MX_UART_RTS_PIN_, MX_UART_NUM)
+#define MX_UART_RTS_PORT_X	CAL_APPEND(MX_UART_RTS_PORT_, MX_UART_NUM)
+#define MX_UART_RTS_TRIS_X	CAL_APPEND(MX_UART_RTS_TRIS_, MX_UART_NUM)
+#define MX_UART_DBITS_X		CAL_APPEND(MX_UART_DBITS_, MX_UART_NUM)
+#define MX_UART_RETURN_X	CAL_APPEND(MX_UART_RETURN_, MX_UART_NUM)
+#define MX_UART_ECHO_X		CAL_APPEND(MX_UART_ECHO_, MX_UART_NUM)
+#define MX_UART_INT_X		CAL_APPEND(MX_UART_INT_, MX_UART_NUM)
+#define MX_UART_BAUD_X		CAL_APPEND(MX_HARD_BAUD_, MX_UART_NUM)
+#define MX_SOFT_BAUD_X		CAL_APPEND(MX_SOFT_BAUD_, MX_UART_NUM)
+#define MX_HARD_SLOW_X		CAL_APPEND(MX_HARD_SLOW_, MX_UART_NUM)
+
+#define UART_Delay_CAL		CAL_APPEND(FC_CAL_UART_Delay_, MX_UART_NUM)
+#define UART_Send			CAL_APPEND(FC_CAL_UART_Send_, MX_UART_NUM)
+#define UART_Uninit			CAL_APPEND(FC_CAL_UART_Uninit_, MX_UART_NUM)
+
+
+//Component Definitions
+#define UART_STATUS_LOOP	0
+#define UART_STATUS_TIMEOUT	1
+#define UART_STATUS_RXBYTE	2
+
+
+//Interrupt Definitions
+#ifdef MX_UART_2_PIE4
+  #define MX_UART2_PIE pie4
+  #define MX_UART2_PIR pir4
+  #define MX_UART2_TXSTA tx2sta
+  #define MX_UART2_RCSTA rc2sta
+  #define MX_UART2_TXREG tx2reg
+  #define MX_UART2_RCREG rc2reg
+#else
+  #define MX_UART2_PIE pie3
+  #define MX_UART2_PIR pir3
+  #define MX_UART2_TXSTA txsta2
+  #define MX_UART2_RCSTA rcsta2
+  #define MX_UART2_TXREG txreg2
+  #define MX_UART2_RCREG rcreg2
+#endif
+
+#if (MX_UART_INT_X == 1)
+
+	#ifndef MX_UART_INT_DEFS
+	#define MX_UART_INT_DEFS
+
+		#define MX_UART_INT_CH1_FUNC
+		#define MX_UART_INT_CH2_FUNC
+		#define MX_UART_INT_FUNC_END
+
+		#define MX_UART_INT_CH1_DET		ts_bit(pir1, RCIF) && ts_bit(pie1, RCIE)
+		#define MX_UART_INT_CH2_DET		ts_bit(MX_UART2_PIR, RC2IF) && ts_bit(MX_UART2_PIE, RC2IE)
+
+		#define MX_UART_INT_CH1_EN		st_bit (pie1, RCIE)
+		#define MX_UART_INT_CH2_EN		st_bit (MX_UART2_PIE, RC2IE)
+
+		#define MX_UART_INT_CH1_DIS		cr_bit (pie1, RCIE)
+		#define MX_UART_INT_CH2_DIS		cr_bit (MX_UART2_PIE, RC2IE)
+
+		#define MX_UART_INT_CH1_CLR		cr_bit (pir1, RCIF)
+		#define MX_UART_INT_CH2_CLR		cr_bit (MX_UART2_PIR, RC2IF)
+
+	#endif
+#endif
+
+
+//Function Prototypes
+CALFUNCTION(void, FC_CAL_UART_Init_, (void));
+CALFUNCTION(void, FC_CAL_UART_Uninit_, (void));
+CALFUNCTION(void, FC_CAL_UART_Send_, (MX_UINT16 nChar));
+CALFUNCTION(MX_SINT16, FC_CAL_UART_Receive_, (MX_UINT8 nTimeout));
+CALFUNCTION(void, FC_CAL_UART_Delay_, (void));
+
+
+//Peripheral Functions
+CALFUNCTION(void, FC_CAL_UART_Init_, (void))
+
+{
+
+	#if (MX_UART_CHANNEL_X == 0)
+		FC_CAL_Bit_In_DDR 	(MX_UART_RX_PORT_X, MX_UART_RX_TRIS_X, MX_UART_RX_PIN_X);		// Receive pin is a input
+		FC_CAL_Bit_High_DDR (MX_UART_TX_PORT_X, MX_UART_TX_TRIS_X, MX_UART_TX_PIN_X);		// Transmit pin is default high
+	#endif
+
+	#if (MX_UART_CHANNEL_X == 1)
+	  #ifndef MX_UART_1
+	  	  #error "UART channel 1 not available on this device"
+	  #else
+		  #if (MX_HARD_SLOW_X == 1)
+			cr_bit(txsta, BRGH);						//Low Speed
+		  #else
+			st_bit(txsta, BRGH);						//High Speed
+0206  1683  	BSF STATUS, RP0
+0207  1303  	BCF STATUS, RP1
+0208  1518  	BSF gbl_txsta,2
+
+		  #endif
+			spbrg = MX_UART_BAUD_X;   					// set the baud rate
+0209  301F  	MOVLW 0x1F
+020A  0099  	MOVWF gbl_spbrg
+
+			rcsta = 0;                    				// 8-bit, disabled
+020B  1283  	BCF STATUS, RP0
+020C  0198  	CLRF gbl_rcsta
+
+
+			#if(MX_UART_DBITS_X == 9)
+				st_bit(txsta, TX9);   					// 9-bit TX
+				st_bit(rcsta, RX9);                    	// 9-bit RX
+			#endif
+
+			st_bit(rcsta, SPEN);         				// turn on serial interface
+020D  1798  	BSF gbl_rcsta,7
+
+			st_bit(txsta, TXEN);
+020E  1683  	BSF STATUS, RP0
+020F  1698  	BSF gbl_txsta,5
+
+			st_bit(rcsta, CREN);
+0210  1283  	BCF STATUS, RP0
+0211  1618  	BSF gbl_rcsta,4
+
+
+			#if (MX_UART_INT_X == 1)
+				MX_UART_INT_CH1_EN;
+				st_bit(intcon, PEIE);
+				st_bit(intcon, GIE);
+			#else
+				cr_bit (pie1, RCIE);
+0212  1683  	BSF STATUS, RP0
+0213  128C  	BCF gbl_pie1,5
+
+			#endif
+	  #endif
+	#endif
+
+
+	#if (MX_UART_CHANNEL_X == 2)
+
+	  #ifndef MX_UART_2
+		  #error "UART channel 2 not available on this device"
+	  #else
+		  #ifdef MX_UART_2_REMAPPABLE
+			RPOR9 = 5;									//TX2 - RP9 - RB6
+			RPINR16	= 10;								//RX2 - RP10 - RB7
+		  #endif
+		  #if (MX_HARD_SLOW_X == 1)
+			cr_bit(MX_UART2_TXSTA, BRGH);						//Low Speed
+		  #else
+			st_bit(MX_UART2_TXSTA, BRGH);						//High Speed
+		  #endif
+			spbrg2 = MX_UART_BAUD_X;   				// set the baud rate
+			MX_UART2_RCSTA = 0;                    				// 8-bit, disabled
+
+			#if(MX_UART_DBITS_X == 9)
+				st_bit(MX_UART2_TXSTA, TX9);   					// 9-bit TX
+				st_bit(MX_UART2_RCSTA, RX9);                    // 9-bit RX
+			#endif
+
+			st_bit(MX_UART2_RCSTA, SPEN);         				// turn on serial interface
+			st_bit(MX_UART2_TXSTA, TXEN);
+			st_bit(MX_UART2_RCSTA, CREN);
+
+			#if (MX_UART_INT_X == 1)
+				MX_UART_INT_CH2_EN;
+				st_bit(intcon, PEIE);
+				st_bit(intcon, GIE);
+			#else
+				cr_bit (MX_UART2_PIE, RC2IE);
+			#endif
+	  #endif
+	#endif
+
+	#if (MX_UART_FLOWEN_X == 1)						//Flowcontrol enabled?
+		FC_CAL_Bit_In_DDR (MX_UART_CTS_PORT_X, MX_UART_CTS_TRIS_X, MX_UART_CTS_PIN_X);	// CTS pin is a input
+		FC_CAL_Bit_High_DDR (MX_UART_RTS_PORT_X, MX_UART_RTS_TRIS_X, MX_UART_RTS_PIN_X);	// RTS not ready to accept data
+	#endif
+
+}
+0214  0008  	RETURN
+
+
+
+
+CALFUNCTION(void, FC_CAL_UART_Uninit_, (void))
+{
+
+	#if (MX_UART_CHANNEL_X == 0)
+		FC_CAL_Bit_In_DDR (MX_UART_RX_PORT_X, MX_UART_RX_TRIS_X, MX_UART_RX_PIN_X);		// Receive pin is a input
+		FC_CAL_Bit_In_DDR (MX_UART_TX_PORT_X, MX_UART_TX_TRIS_X, MX_UART_TX_PIN_X);		// Transmit pin is default high
+	#endif
+
+	#if (MX_UART_CHANNEL_X == 1)
+			rcsta = 0;                    								// 8-bit, disabled
+			txsta = 0;
+		  #ifdef MX_UART_RXINT
+			MX_UART_INT_CH1_DIS;
+		  #endif
+	#endif
+
+	#if (MX_UART_CHANNEL_X == 2)
+			MX_UART2_RCSTA = 0;                    								// 8-bit, disabled
+			MX_UART2_TXSTA = 0;
+		  #ifdef MX_UART_RXINT
+			MX_UART_INT_CH2_DIS;
+		  #endif
+	#endif
+
+	#if (MX_UART_FLOWEN_X == 1)										//Flowcontrol enabled?
+		FC_CAL_Bit_In_DDR (MX_UART_CTS_PORT_X, MX_UART_CTS_TRIS_X, MX_UART_CTS_PIN_X);		// CTS pin is a input
+		FC_CAL_Bit_In_DDR (MX_UART_RTS_PORT_X, MX_UART_RTS_TRIS_X, MX_UART_RTS_PIN_X);		// RTS not ready to accept data
+	#endif
+}
+
+
+
+CALFUNCTION(void, FC_CAL_UART_Send_, (MX_UINT16 nChar))
+{
+	#if (MX_UART_FLOWEN_X == 1)
+		while (FC_CAL_Bit_In(MX_UART_CTS_PORT_X, MX_UART_CTS_PIN_X) != 0);	// Wait until CTS is low
+	#endif
+
+	#if (MX_UART_CHANNEL_X == 0)													// Software UART TX
+		MX_UINT8 idx;
+		FC_CAL_Bit_Low(MX_UART_TX_PORT_X, MX_UART_TX_PIN_X);					// Send Start bit
+		UART_Delay_CAL();
+		for (idx = 0; idx < MX_UART_DBITS_X; idx++)
+		{
+			if (nChar & 0x01)														// Mask off data bit
+				FC_CAL_Bit_High(MX_UART_TX_PORT_X, MX_UART_TX_PIN_X);
+			else
+				FC_CAL_Bit_Low(MX_UART_TX_PORT_X, MX_UART_TX_PIN_X);
+			UART_Delay_CAL();
+			nChar = nChar >> 1;														// Move to next data bit
+		}
+		FC_CAL_Bit_High(MX_UART_TX_PORT_X, MX_UART_TX_PIN_X);					// Send Stop bit
+		UART_Delay_CAL();
+	#endif
+
+	#if (MX_UART_CHANNEL_X == 1)
+		while (ts_bit(pir1, TXIF) == 0);
+
+		#if (MX_UART_DBITS_X == 9)
+			if (test_bit(nChar, 8))
+				st_bit(txsta, TX9D);
+			else
+				cr_bit(txsta, TX9D);
+	  	#endif
+		txreg = nChar;
+	#endif
+
+	#if (MX_UART_CHANNEL_X == 2)
+		while (ts_bit(pir3, TX2IF) == 0);
+
+		#if (MX_UART_DBITS_X == 9)
+			if (test_bit(nChar, 8))
+				st_bit(MX_UART2_TXSTA, TX9D);
+			else
+				cr_bit(MX_UART2_TXSTA, TX9D);
+		#endif
+		MX_UART2_TXREG = nChar;
+	#endif
+}
+
+
+CALFUNCTION(MX_SINT16, FC_CAL_UART_Receive_, (MX_UINT8 nTimeout))
+
+{
+  #if (MX_UART_RETURN_X == 1)
+	MX_UINT16 retVal = 512;
+  #else
+  	MX_UINT8 retVal = 255;
+0038  30FF  	MOVLW 0xFF
+0039  00C3  	MOVWF FC_CAL_UAR_00056_1_retVal
+
+  #endif
+
+	MX_UINT8 delay1 = 0;
+003A  01C4  	CLRF FC_CAL_UAR_00056_1_delay1
+
+	MX_UINT8 regcheck = 0;
+003B  01C5  	CLRF FC_CAL_UAR_00056_1_regcheck
+
+	MX_UINT8 bWaitForever = 0;
+003C  01C6  	CLRF FC_CAL_UAR_00056_1_bWaitForever
+
+	MX_UINT8 rxStatus = UART_STATUS_LOOP;
+003D  01C7  	CLRF FC_CAL_UAR_00056_1_rxStatus
+
+
+  #if (MX_UART_CHANNEL_X == 0)
+  	MX_UINT8 idx;
+  #else
+  	MX_UINT8 dummy = 0;
+003E  01C8  	CLRF FC_CAL_UAR_00056_1_dummy
+
+  #endif
+
+	if (nTimeout == 255)
+003F  0A42  	INCF FC_CAL_UAR_00056_arg_nTimeout, W
+0040  1D03  	BTFSS STATUS,Z
+0041  2844  	GOTO	label4
+0044        label4
+
+		bWaitForever = 1;
+0042  3001  	MOVLW 0x01
+0043  00C6  	MOVWF FC_CAL_UAR_00056_1_bWaitForever
+
+
+	#if (MX_UART_FLOWEN_X == 1)
+		FC_CAL_Bit_Low (MX_UART_RTS_PORT_X, MX_UART_RTS_PIN_X);			// Ready to accept data
+	#endif
+
+	while (rxStatus == UART_STATUS_LOOP)
+0044  08C7  	MOVF FC_CAL_UAR_00056_1_rxStatus, F
+0045  1D03  	BTFSS STATUS,Z
+0046  2868  	GOTO	label7
+0067  2844  	GOTO	label4
+0068        label7
+
+	{
+		if (bWaitForever == 0)
+0047  08C6  	MOVF FC_CAL_UAR_00056_1_bWaitForever, F
+0048  1D03  	BTFSS STATUS,Z
+0049  285D  	GOTO	label6
+
+		{
+			if (nTimeout == 0)							//don't wait forever, so do timeout thing...
+004A  08C2  	MOVF FC_CAL_UAR_00056_arg_nTimeout, F
+004B  1D03  	BTFSS STATUS,Z
+004C  2850  	GOTO	label5
+0050        label5
+
+			{
+				rxStatus = UART_STATUS_TIMEOUT;
+004D  3001  	MOVLW 0x01
+004E  00C7  	MOVWF FC_CAL_UAR_00056_1_rxStatus
+
+			}
+			else
+004F  285D  	GOTO	label6
+
+			{
+				delay_us(10);
+0050  300A  	MOVLW 0x0A
+0051  00C9  	MOVWF delay_us_00000_arg_del
+0052  2010  	CALL delay_us_00000
+
+				delay1 = delay1 + 1;
+0053  0A44  	INCF FC_CAL_UAR_00056_1_delay1, W
+0054  00C4  	MOVWF FC_CAL_UAR_00056_1_delay1
+
+				if(delay1 == 100)
+0055  0844  	MOVF FC_CAL_UAR_00056_1_delay1, W
+0056  3A64  	XORLW 0x64
+0057  1D03  	BTFSS STATUS,Z
+0058  285D  	GOTO	label6
+005D        label6
+
+				{
+					nTimeout = nTimeout - 1;
+0059  0342  	DECF FC_CAL_UAR_00056_arg_nTimeout, W
+005A  00C2  	MOVWF FC_CAL_UAR_00056_arg_nTimeout
+
+					MX_CLEAR_WATCHDOG;
+005B  0064  	CLRWDT
+
+					delay1 = 0;
+005C  01C4  	CLRF FC_CAL_UAR_00056_1_delay1
+
+				}
+			}
+		}
+
+		#if (MX_UART_CHANNEL_X == 0)
+			regcheck = FC_CAL_Bit_In(MX_UART_RX_PORT_1, MX_UART_RX_PIN_1);	//Test for start bit
+			if (regcheck == 0)
+				rxStatus = UART_STATUS_RXBYTE;
+		#endif
+
+		#if (MX_UART_CHANNEL_X == 1)
+			regcheck = ts_bit(pir1, RCIF);
+005D  3020  	MOVLW 0x20
+005E  1283  	BCF STATUS, RP0
+005F  050C  	ANDWF gbl_pir1, W
+0060  1683  	BSF STATUS, RP0
+0061  00C5  	MOVWF FC_CAL_UAR_00056_1_regcheck
+
+			if (regcheck != 0)
+0062  08C5  	MOVF FC_CAL_UAR_00056_1_regcheck, F
+0063  1903  	BTFSC STATUS,Z
+0064  2844  	GOTO	label4
+
+				rxStatus = UART_STATUS_RXBYTE;
+0065  3002  	MOVLW 0x02
+0066  00C7  	MOVWF FC_CAL_UAR_00056_1_rxStatus
+
+		#endif
+
+		#if (MX_UART_CHANNEL_X == 2)
+			regcheck = ts_bit(MX_UART2_PIR, RC2IF);
+			if (regcheck != 0)
+				rxStatus = UART_STATUS_RXBYTE;
+		#endif
+
+	}
+
+	if (rxStatus == UART_STATUS_RXBYTE)
+0068  0847  	MOVF FC_CAL_UAR_00056_1_rxStatus, W
+0069  3A02  	XORLW 0x02
+006A  1D03  	BTFSS STATUS,Z
+006B  288B  	GOTO	label10
+
+	{
+		#if (MX_UART_CHANNEL_X == 0)
+
+			retVal = 0;
+			UART_Delay_CAL();
+
+			for (idx = 0; idx < MX_UART_DBITS_X; idx++)
+			{
+				if (FC_CAL_Bit_In(MX_UART_RX_PORT_X, MX_UART_RX_PIN_X))
+					retVal = retVal | (0x01 << idx);
+
+				UART_Delay_CAL();
+			}
+		#endif
+
+		#if (MX_UART_CHANNEL_X == 1)
+			regcheck = ts_bit(rcsta, FERR);
+006C  3004  	MOVLW 0x04
+006D  1283  	BCF STATUS, RP0
+006E  0518  	ANDWF gbl_rcsta, W
+006F  1683  	BSF STATUS, RP0
+0070  00C5  	MOVWF FC_CAL_UAR_00056_1_regcheck
+
+			if (regcheck != 0)
+0071  08C5  	MOVF FC_CAL_UAR_00056_1_regcheck, F
+0072  1903  	BTFSC STATUS,Z
+0073  2879  	GOTO	label8
+0079        label8
+
+			{
+				dummy = rcreg;						//need to read the rcreg to clear FERR
+0074  1283  	BCF STATUS, RP0
+0075  081A  	MOVF gbl_rcreg, W
+0076  1683  	BSF STATUS, RP0
+0077  00C8  	MOVWF FC_CAL_UAR_00056_1_dummy
+
+				#if (MX_UART_RETURN_X == 1)
+					retVal = 0x400;					//Framing Error Flag
+				#endif
+			}
+			else
+0078  288B  	GOTO	label10
+
+			{
+				regcheck = ts_bit(rcsta, OERR);
+0079  3002  	MOVLW 0x02
+007A  1283  	BCF STATUS, RP0
+007B  0518  	ANDWF gbl_rcsta, W
+007C  1683  	BSF STATUS, RP0
+007D  00C5  	MOVWF FC_CAL_UAR_00056_1_regcheck
+
+				if (regcheck != 0)
+007E  08C5  	MOVF FC_CAL_UAR_00056_1_regcheck, F
+007F  1903  	BTFSC STATUS,Z
+0080  2885  	GOTO	label9
+0085        label9
+
+				{
+					cr_bit(rcsta, CREN);			//Reset receiver to clear error
+0081  1283  	BCF STATUS, RP0
+0082  1218  	BCF gbl_rcsta,4
+
+					st_bit(rcsta, CREN);
+0083  1618  	BSF gbl_rcsta,4
+
+
+					#if (MX_UART_RETURN_X == 1)
+						retVal = 0x800;				//Overrun Error Flag
+					#endif
+				}
+				else
+0084  288B  	GOTO	label10
+008B        label10
+
+				{
+					retVal = 0;
+0085  01C3  	CLRF FC_CAL_UAR_00056_1_retVal
+
+
+					#if (MX_UART_DBITS_X == 9)
+						if(ts_bit(rcsta, RX9D))
+							retVal = 0x100;
+					#endif
+
+					retVal = retVal | rcreg; 			//no error, so rx byte is valid
+0086  1283  	BCF STATUS, RP0
+0087  081A  	MOVF gbl_rcreg, W
+0088  1683  	BSF STATUS, RP0
+0089  0443  	IORWF FC_CAL_UAR_00056_1_retVal, W
+008A  00C3  	MOVWF FC_CAL_UAR_00056_1_retVal
+
+				}
+			}
+		#endif
+
+		#if (MX_UART_CHANNEL_X == 2)
+			regcheck = ts_bit(MX_UART2_RCSTA, FERR);
+			if (regcheck != 0)
+			{
+				dummy = MX_UART2_RCREG;			//need to read the rcreg to clear FERR
+				#if (MX_UART_RETURN_X == 1)
+					retVal = 0x400;					//Framing Error Flag
+				#endif
+			}
+			else
+			{
+				regcheck = ts_bit(MX_UART2_RCSTA, OERR);
+				if (regcheck != 0)
+				{
+					cr_bit(MX_UART2_RCSTA, CREN);	//Reset receiver to clear error
+					st_bit(MX_UART2_RCSTA, CREN);
+					#if (MX_UART_RETURN_X == 1)
+						retVal = 0x800;				//Overrun Error Flag
+					#endif
+				}
+				else
+				{
+					retVal = 0;
+
+					#if (MX_UART_DBITS_X == 9)
+						if(ts_bit(MX_UART2_RCSTA, RX9D))
+							retVal = 0x100;
+					#endif
+
+					retVal = retVal | MX_UART2_RCREG; 			//no error, so rx byte is valid
+				}
+			}
+
+		#endif
+
+		#if (MX_UART_ECHO_X == 1)
+			UART_Send(retVal);
+		#endif
+	}
+
+	#if (MX_UART_FLOWEN_X == 1)
+		FC_CAL_Bit_High(MX_UART_RTS_PORT_X, MX_UART_RTS_PIN_X);		//not ready to accept data
+	#endif
+
+	return (retVal);
+008B  1683  	BSF STATUS, RP0
+008C  0843  	MOVF FC_CAL_UAR_00056_1_retVal, W
+008D  00C9  	MOVWF CompTempVarRet2293
+008E  01CA  	CLRF CompTempVarRet2293+D'1'
+
+}
+008F  0008  	RETURN
+
+
+
+CALFUNCTION(void, FC_CAL_UART_Delay_, (void))
+{
+  #if (MX_UART_CHANNEL_X == 0)
+
+	MX_UINT16 delay = MX_SOFT_BAUD_X;
+
+	while (delay > 255)
+	{
+		delay_us(255);
+		delay = delay - 255;
+		MX_CLEAR_WATCHDOG;
+	}
+	delay_us(delay);
+	MX_CLEAR_WATCHDOG;
+
+  #endif
+}
+
+
+CALFUNCTION(void, FC_CAL_UART_Update_Baud_, (MX_UINT8 new_baud))
+{
+	//Baud Rates - Function compatible with hardware mode only
+	/*
+	0 - 1200
+	1 - 2400
+	2 - 4800
+	3 - 9600
+	4 - 19200
+	5 - 38400
+	6 - 57600
+	7 - 115200
+	*/
+
+	MX_UINT8 baudrate, baudmode;
+
+	if (new_baud > 7)
+		return;
+
+	if (new_baud == 0)
+	{
+		baudrate = MX_HARD_BAUD_1200;
+		baudmode = MX_HARD_SLOW_1200;
+	}
+	else if (new_baud == 1)
+	{
+		baudrate = MX_HARD_BAUD_2400;
+		baudmode = MX_HARD_SLOW_2400;
+	}
+	else if (new_baud == 2)
+	{
+		baudrate = MX_HARD_BAUD_4800;
+		baudmode = MX_HARD_SLOW_4800;
+	}
+	else if (new_baud == 3)
+	{
+		baudrate = MX_HARD_BAUD_9600;
+		baudmode = MX_HARD_SLOW_9600;
+	}
+	else if (new_baud == 4)
+	{
+		baudrate = MX_HARD_BAUD_19200;
+		baudmode = MX_HARD_SLOW_19200;
+	}
+	else if (new_baud == 5)
+	{
+		baudrate = MX_HARD_BAUD_38400;
+		baudmode = MX_HARD_SLOW_38400;
+	}
+	else if (new_baud == 6)
+	{
+		baudrate = MX_HARD_BAUD_57600;
+		baudmode = MX_HARD_SLOW_57600;
+	}
+	else if (new_baud == 7)
+	{
+		baudrate = MX_HARD_BAUD_115200;
+		baudmode = MX_HARD_SLOW_115200;
+	}
+
+	UART_Uninit();
+
+	#if (MX_UART_CHANNEL_X == 1)
+
+	    if (baudmode == 1)
+			cr_bit(txsta, BRGH);					//Low Speed
+	    else
+			st_bit(txsta, BRGH);					//High Speed
+
+		spbrg = baudrate;   						// set the baud rate
+		rcsta = 0;                    				// 8-bit, disabled
+
+		#if(MX_UART_DBITS_X == 9)
+			st_bit(txsta, TX9);   					// 9-bit TX
+			st_bit(rcsta, RX9);                    	// 9-bit RX
+		#endif
+
+		st_bit(rcsta, SPEN);         				// turn on serial interface
+		st_bit(txsta, TXEN);
+		st_bit(rcsta, CREN);
+
+		#if (MX_UART_INT_X == 1)
+			MX_UART_INT_CH1_EN;
+			st_bit(intcon, PEIE);
+			st_bit(intcon, GIE);
+		#else
+			cr_bit (pie1, RCIE);
+		#endif
+	#endif
+
+	#if (MX_UART_CHANNEL_X == 2)
+
+	  	if (baudmode == 1)
+			cr_bit(MX_UART2_TXSTA, BRGH);			//Low Speed
+	  	else
+			st_bit(MX_UART2_TXSTA, BRGH);			//High Speed
+
+		spbrg2 = baudrate;   						// set the baud rate
+		MX_UART2_RCSTA = 0;                    		// 8-bit, disabled
+
+		#if(MX_UART_DBITS_X == 9)
+			st_bit(MX_UART2_TXSTA, TX9);   			// 9-bit TX
+			st_bit(MX_UART2_RCSTA, RX9);            // 9-bit RX
+		#endif
+
+		st_bit(MX_UART2_RCSTA, SPEN);         		// turn on serial interface
+		st_bit(MX_UART2_TXSTA, TXEN);
+		st_bit(MX_UART2_RCSTA, CREN);
+
+		#if (MX_UART_INT_X == 1)
+			MX_UART_INT_CH2_EN;
+			st_bit(intcon, PEIE);
+			st_bit(intcon, GIE);
+		#else
+			cr_bit (MX_UART2_PIE, RC2IE);
+		#endif
+	#endif
+
+	#if (MX_UART_FLOWEN_X == 1)						//Flowcontrol enabled?
+		FC_CAL_Bit_In_DDR (MX_UART_CTS_PORT_X, MX_UART_CTS_TRIS_X, MX_UART_CTS_PIN_X);	// CTS pin is a input
+		FC_CAL_Bit_High_DDR (MX_UART_RTS_PORT_X, MX_UART_RTS_TRIS_X, MX_UART_RTS_PIN_X);	// RTS not ready to accept data
+	#endif
+
+}
+
+////////////////////////////////////////
+// Code with no source :-)
+////////////////////////////////////////
+0000  2FED  	GOTO	_startup
+
+0004  00FF  	MOVWF Int1Context
+0005  0E03  	SWAPF STATUS, W
+0006  1283  	BCF STATUS, RP0
+0007  1303  	BCF STATUS, RP1
+0008  00E8  	MOVWF Int1BContext
+0009  0E0A  	SWAPF PCLATH, W
+000A  00E9  	MOVWF Int1BContext+D'1'
+000B  0E04  	SWAPF FSR, W
+000C  00EA  	MOVWF Int1BContext+D'2'
+000D  158A  	BSF PCLATH,3
+000E  120A  	BCF PCLATH,4
+000F  284B  	GOTO	interrupt
+0010        delay_us_00000
+0010        ; { delay_us ; function begin
+0010        label1
+0010  0000  	NOP
+0011  0000  	NOP
+0012  0BC9  	DECFSZ delay_us_00000_arg_del, F
+0013  2810  	GOTO	label1
+0014  0008  	RETURN
+0015        ; } delay_us function end
+
+0015        __mul_32u__0000F
+0015        ; { __mul_32u_32u ; function begin
+0015  01CE  	CLRF __mul_32u__0000F_1_i
+0016  01CF  	CLRF CompTempVarRet464
+0017  01D0  	CLRF CompTempVarRet464+D'1'
+0018  01D1  	CLRF CompTempVarRet464+D'2'
+0019  01D2  	CLRF CompTempVarRet464+D'3'
+001A        label2
+001A  1ACE  	BTFSC __mul_32u__0000F_1_i,5
+001B  0008  	RETURN
+001C  1C46  	BTFSS __mul_32u__0000F_arg_b,0
+001D  282C  	GOTO	label3
+001E  0842  	MOVF __mul_32u__0000F_arg_a, W
+001F  07CF  	ADDWF CompTempVarRet464, F
+0020  0843  	MOVF __mul_32u__0000F_arg_a+D'1', W
+0021  1803  	BTFSC gbl_status,0
+0022  0F43  	INCFSZ __mul_32u__0000F_arg_a+D'1', W
+0023  07D0  	ADDWF CompTempVarRet464+D'1', F
+0024  0844  	MOVF __mul_32u__0000F_arg_a+D'2', W
+0025  1803  	BTFSC gbl_status,0
+0026  0F44  	INCFSZ __mul_32u__0000F_arg_a+D'2', W
+0027  07D1  	ADDWF CompTempVarRet464+D'2', F
+0028  0845  	MOVF __mul_32u__0000F_arg_a+D'3', W
+0029  1803  	BTFSC gbl_status,0
+002A  0F45  	INCFSZ __mul_32u__0000F_arg_a+D'3', W
+002B  07D2  	ADDWF CompTempVarRet464+D'3', F
+002C        label3
+002C  1003  	BCF gbl_status,0
+002D  0CC9  	RRF __mul_32u__0000F_arg_b+D'3', F
+002E  0CC8  	RRF __mul_32u__0000F_arg_b+D'2', F
+002F  0CC7  	RRF __mul_32u__0000F_arg_b+D'1', F
+0030  0CC6  	RRF __mul_32u__0000F_arg_b, F
+0031  1003  	BCF gbl_status,0
+0032  0DC2  	RLF __mul_32u__0000F_arg_a, F
+0033  0DC3  	RLF __mul_32u__0000F_arg_a+D'1', F
+0034  0DC4  	RLF __mul_32u__0000F_arg_a+D'2', F
+0035  0DC5  	RLF __mul_32u__0000F_arg_a+D'3', F
+0036  0ACE  	INCF __mul_32u__0000F_1_i, F
+0037  281A  	GOTO	label2
+0038        ; } __mul_32u_32u function end
+
+
+0172        __rem_8_8_00000
+0172        ; { __rem_8_8 ; function begin
+0172  01BC  	CLRF CompTempVarRet220
+0173  01BA  	CLRF __rem_8_8_00000_1_c
+0174  01BB  	CLRF __rem_8_8_00000_1_i
+0175        label43
+0175  19BB  	BTFSC __rem_8_8_00000_1_i,3
+0176  0008  	RETURN
+0177  1003  	BCF STATUS,C
+0178  0DBA  	RLF __rem_8_8_00000_1_c, F
+0179  0DB8  	RLF __rem_8_8_00000_arg_a, F
+017A  0DBC  	RLF CompTempVarRet220, F
+017B  0839  	MOVF __rem_8_8_00000_arg_b, W
+017C  023C  	SUBWF CompTempVarRet220, W
+017D  1C03  	BTFSS STATUS,C
+017E  2981  	GOTO	label44
+017F  00BC  	MOVWF CompTempVarRet220
+0180  143A  	BSF __rem_8_8_00000_1_c,0
+0181        label44
+0181  0ABB  	INCF __rem_8_8_00000_1_i, F
+0182  2975  	GOTO	label43
+0183        ; } __rem_8_8 function end
+
+0183        __rem_32_3_00002
+0183        ; { __rem_32_32 ; function begin
+0183  01CD  	CLRF CompTempVarRet212
+0184  01CE  	CLRF CompTempVarRet212+D'1'
+0185  01CF  	CLRF CompTempVarRet212+D'2'
+0186  01D0  	CLRF CompTempVarRet212+D'3'
+0187  01C8  	CLRF __rem_32_3_00002_1_c
+0188  01C9  	CLRF __rem_32_3_00002_1_c+D'1'
+0189  01CA  	CLRF __rem_32_3_00002_1_c+D'2'
+018A  01CB  	CLRF __rem_32_3_00002_1_c+D'3'
+018B  01CC  	CLRF __rem_32_3_00002_1_i
+018C        label45
+018C  1ACC  	BTFSC __rem_32_3_00002_1_i,5
+018D  0008  	RETURN
+018E  1003  	BCF STATUS,C
+018F  0DC8  	RLF __rem_32_3_00002_1_c, F
+0190  0DC9  	RLF __rem_32_3_00002_1_c+D'1', F
+0191  0DCA  	RLF __rem_32_3_00002_1_c+D'2', F
+0192  0DCB  	RLF __rem_32_3_00002_1_c+D'3', F
+0193  0DB8  	RLF __rem_32_3_00002_arg_a, F
+0194  0DB9  	RLF __rem_32_3_00002_arg_a+D'1', F
+0195  0DBA  	RLF __rem_32_3_00002_arg_a+D'2', F
+0196  0DBB  	RLF __rem_32_3_00002_arg_a+D'3', F
+0197  0DCD  	RLF CompTempVarRet212, F
+0198  0DCE  	RLF CompTempVarRet212+D'1', F
+0199  0DCF  	RLF CompTempVarRet212+D'2', F
+019A  0DD0  	RLF CompTempVarRet212+D'3', F
+019B  083F  	MOVF __rem_32_3_00002_arg_b+D'3', W
+019C  0250  	SUBWF CompTempVarRet212+D'3', W
+019D  1D03  	BTFSS STATUS,Z
+019E  29A9  	GOTO	label46
+019F  083E  	MOVF __rem_32_3_00002_arg_b+D'2', W
+01A0  024F  	SUBWF CompTempVarRet212+D'2', W
+01A1  1D03  	BTFSS STATUS,Z
+01A2  29A9  	GOTO	label46
+01A3  083D  	MOVF __rem_32_3_00002_arg_b+D'1', W
+01A4  024E  	SUBWF CompTempVarRet212+D'1', W
+01A5  1D03  	BTFSS STATUS,Z
+01A6  29A9  	GOTO	label46
+01A7  083C  	MOVF __rem_32_3_00002_arg_b, W
+01A8  024D  	SUBWF CompTempVarRet212, W
+01A9        label46
+01A9  1C03  	BTFSS STATUS,C
+01AA  29BA  	GOTO	label47
+01AB  083C  	MOVF __rem_32_3_00002_arg_b, W
+01AC  02CD  	SUBWF CompTempVarRet212, F
+01AD  083D  	MOVF __rem_32_3_00002_arg_b+D'1', W
+01AE  1C03  	BTFSS STATUS,C
+01AF  0F3D  	INCFSZ __rem_32_3_00002_arg_b+D'1', W
+01B0  02CE  	SUBWF CompTempVarRet212+D'1', F
+01B1  083E  	MOVF __rem_32_3_00002_arg_b+D'2', W
+01B2  1C03  	BTFSS STATUS,C
+01B3  0F3E  	INCFSZ __rem_32_3_00002_arg_b+D'2', W
+01B4  02CF  	SUBWF CompTempVarRet212+D'2', F
+01B5  083F  	MOVF __rem_32_3_00002_arg_b+D'3', W
+01B6  1C03  	BTFSS STATUS,C
+01B7  0F3F  	INCFSZ __rem_32_3_00002_arg_b+D'3', W
+01B8  02D0  	SUBWF CompTempVarRet212+D'3', F
+01B9  1448  	BSF __rem_32_3_00002_1_c,0
+01BA        label47
+01BA  0ACC  	INCF __rem_32_3_00002_1_i, F
+01BB  298C  	GOTO	label45
+01BC        ; } __rem_32_32 function end
+
+01BC        __div_8_8_00000
+01BC        ; { __div_8_8 ; function begin
+01BC  01BA  	CLRF __div_8_8_00000_1_r
+01BD  01BC  	CLRF CompTempVarRet218
+01BE  01BB  	CLRF __div_8_8_00000_1_i
+01BF        label48
+01BF  19BB  	BTFSC __div_8_8_00000_1_i,3
+01C0  0008  	RETURN
+01C1  1003  	BCF STATUS,C
+01C2  0DBC  	RLF CompTempVarRet218, F
+01C3  0DB8  	RLF __div_8_8_00000_arg_a, F
+01C4  0DBA  	RLF __div_8_8_00000_1_r, F
+01C5  0839  	MOVF __div_8_8_00000_arg_b, W
+01C6  023A  	SUBWF __div_8_8_00000_1_r, W
+01C7  1C03  	BTFSS STATUS,C
+01C8  29CB  	GOTO	label49
+01C9  00BA  	MOVWF __div_8_8_00000_1_r
+01CA  143C  	BSF CompTempVarRet218,0
+01CB        label49
+01CB  0ABB  	INCF __div_8_8_00000_1_i, F
+01CC  29BF  	GOTO	label48
+01CD        ; } __div_8_8 function end
+
+01CD        __div_32_3_00001
+01CD        ; { __div_32_32 ; function begin
+01CD  01C8  	CLRF __div_32_3_00001_1_r
+01CE  01C9  	CLRF __div_32_3_00001_1_r+D'1'
+01CF  01CA  	CLRF __div_32_3_00001_1_r+D'2'
+01D0  01CB  	CLRF __div_32_3_00001_1_r+D'3'
+01D1  01CD  	CLRF CompTempVarRet210
+01D2  01CE  	CLRF CompTempVarRet210+D'1'
+01D3  01CF  	CLRF CompTempVarRet210+D'2'
+01D4  01D0  	CLRF CompTempVarRet210+D'3'
+01D5  01CC  	CLRF __div_32_3_00001_1_i
+01D6        label50
+01D6  1ACC  	BTFSC __div_32_3_00001_1_i,5
+01D7  0008  	RETURN
+01D8  1003  	BCF STATUS,C
+01D9  0DCD  	RLF CompTempVarRet210, F
+01DA  0DCE  	RLF CompTempVarRet210+D'1', F
+01DB  0DCF  	RLF CompTempVarRet210+D'2', F
+01DC  0DD0  	RLF CompTempVarRet210+D'3', F
+01DD  0DC0  	RLF __div_32_3_00001_arg_a, F
+01DE  0DC1  	RLF __div_32_3_00001_arg_a+D'1', F
+01DF  0DC2  	RLF __div_32_3_00001_arg_a+D'2', F
+01E0  0DC3  	RLF __div_32_3_00001_arg_a+D'3', F
+01E1  0DC8  	RLF __div_32_3_00001_1_r, F
+01E2  0DC9  	RLF __div_32_3_00001_1_r+D'1', F
+01E3  0DCA  	RLF __div_32_3_00001_1_r+D'2', F
+01E4  0DCB  	RLF __div_32_3_00001_1_r+D'3', F
+01E5  0847  	MOVF __div_32_3_00001_arg_b+D'3', W
+01E6  024B  	SUBWF __div_32_3_00001_1_r+D'3', W
+01E7  1D03  	BTFSS STATUS,Z
+01E8  29F3  	GOTO	label51
+01E9  0846  	MOVF __div_32_3_00001_arg_b+D'2', W
+01EA  024A  	SUBWF __div_32_3_00001_1_r+D'2', W
+01EB  1D03  	BTFSS STATUS,Z
+01EC  29F3  	GOTO	label51
+01ED  0845  	MOVF __div_32_3_00001_arg_b+D'1', W
+01EE  0249  	SUBWF __div_32_3_00001_1_r+D'1', W
+01EF  1D03  	BTFSS STATUS,Z
+01F0  29F3  	GOTO	label51
+01F1  0844  	MOVF __div_32_3_00001_arg_b, W
+01F2  0248  	SUBWF __div_32_3_00001_1_r, W
+01F3        label51
+01F3  1C03  	BTFSS STATUS,C
+01F4  2A04  	GOTO	label52
+01F5  0844  	MOVF __div_32_3_00001_arg_b, W
+01F6  02C8  	SUBWF __div_32_3_00001_1_r, F
+01F7  0845  	MOVF __div_32_3_00001_arg_b+D'1', W
+01F8  1C03  	BTFSS STATUS,C
+01F9  0F45  	INCFSZ __div_32_3_00001_arg_b+D'1', W
+01FA  02C9  	SUBWF __div_32_3_00001_1_r+D'1', F
+01FB  0846  	MOVF __div_32_3_00001_arg_b+D'2', W
+01FC  1C03  	BTFSS STATUS,C
+01FD  0F46  	INCFSZ __div_32_3_00001_arg_b+D'2', W
+01FE  02CA  	SUBWF __div_32_3_00001_1_r+D'2', F
+01FF  0847  	MOVF __div_32_3_00001_arg_b+D'3', W
+0200  1C03  	BTFSS STATUS,C
+0201  0F47  	INCFSZ __div_32_3_00001_arg_b+D'3', W
+0202  02CB  	SUBWF __div_32_3_00001_1_r+D'3', F
+0203  144D  	BSF CompTempVarRet210,0
+0204        label52
+0204  0ACC  	INCF __div_32_3_00001_1_i, F
+0205  29D6  	GOTO	label50
+0206        ; } __div_32_32 function end
+
+
+07ED        _startup
+07ED  30D5  	MOVLW 0xD5
+07EE  1283  	BCF STATUS, RP0
+07EF  1303  	BCF STATUS, RP1
+07F0  00AF  	MOVWF gbl_14_LSR
+07F1  30C4  	MOVLW 0xC4
+07F2  00B0  	MOVWF gbl_14_LSR+D'1'
+07F3  30BB  	MOVLW 0xBB
+07F4  00B1  	MOVWF gbl_14_LSR+D'2'
+07F5  30DC  	MOVLW 0xDC
+07F6  00B2  	MOVWF gbl_14_LSR+D'3'
+07F7  01B3  	CLRF gbl_15_gbl_aSig
+07F8  01B4  	CLRF gbl_15_gbl_aSig+D'1'
+07F9  01B5  	CLRF gbl_15_gbl_aSig+D'2'
+07FA  01B6  	CLRF gbl_15_gbl_aSig+D'3'
+07FB  01B7  	CLRF gbl_15_gbl_bSig
+07FC  01B8  	CLRF gbl_15_gbl_bSig+D'1'
+07FD  01B9  	CLRF gbl_15_gbl_bSig+D'2'
+07FE  01BA  	CLRF gbl_15_gbl_bSig+D'3'
+07FF  01BB  	CLRF gbl_15_gbl_zSig
+0800  01BC  	CLRF gbl_15_gbl_zSig+D'1'
+0801  01BD  	CLRF gbl_15_gbl_zSig+D'2'
+0802  01BE  	CLRF gbl_15_gbl_zSig+D'3'
+0803  01F2  	CLRF gbl_15_gbl_aExp
+0804  01F3  	CLRF gbl_15_gbl_bExp
+0805  01EB  	CLRF gbl_15_gbl_zExp
+0806  01EC  	CLRF gbl_15_gbl_zExp+D'1'
+0807  01F4  	CLRF gbl_15_gbl_aSign
+0808  01F5  	CLRF gbl_15_gbl_bSign
+0809  01F6  	CLRF gbl_15_gbl_zSign
+080A  01F7  	CLRF gbl_15_gbl_zSigZero
+080B  01BF  	CLRF gbl_15_gbl_ret
+080C  01C0  	CLRF gbl_15_gbl_ret+D'1'
+080D  01C1  	CLRF gbl_15_gbl_ret+D'2'
+080E  01C2  	CLRF gbl_15_gbl_ret+D'3'
+080F  01F0  	CLRF gbl_float_rounding_mode
+0810  01F1  	CLRF gbl_float_exception_flags
+0811  01EF  	CLRF gbl_float_detect_tininess
+
+0848  118A  	BCF PCLATH,3
+0849  120A  	BCF PCLATH,4
+084A  2D9D  	GOTO	main
+
+2007  20D2  	DW 0x20D2
+2008  3FFF  	DW 0x3FFF

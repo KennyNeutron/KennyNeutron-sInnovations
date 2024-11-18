@@ -1,0 +1,27 @@
+// SourceBoost Linker Function Resource Usage Dump
+
+#GLOBAL:"global",line = 0,ram = 92.6,rom = 0;
+__div_16_16(unsigned short,unsigned short):"E:\Prg\compiler.trunk\picantc\libc\div.c",line = 116,ram = 9.0,rom = 31;
+__rem_16_16(unsigned short,unsigned short):"E:\Prg\compiler.trunk\picantc\libc\div.c",line = 145,ram = 9.0,rom = 31;
+__div_8_8(unsigned char,unsigned char):"E:\Prg\compiler.trunk\picantc\libc\div.c",line = 176,ram = 5.0,rom = 19;
+__rem_8_8(unsigned char,unsigned char):"E:\Prg\compiler.trunk\picantc\libc\div.c",line = 206,ram = 5.0,rom = 19;
+__mul_32u_32u(unsigned long,unsigned long):"E:\Prg\compiler.trunk\picantc\libc\mul.c",line = 447,ram = 13.0,rom = 35;
+FCI_RIGHTSTRING(unsigned char*,unsigned char,unsigned char,unsigned char*,unsigned char):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_String.c",line = 158,ram = 11.0,rom = 81;
+FCI_STRING_TO_INT(unsigned char*,unsigned char):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_String.c",line = 514,ram = 14.0,rom = 153;
+FCM_off_all(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardProgram0306.c",line = 385,ram = 0.0,rom = 18;
+FCM_data_bank(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardProgram0306.c",line = 407,ram = 0.0,rom = 206;
+FCM_latch(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardProgram0306.c",line = 707,ram = 1.0,rom = 21;
+FCM_reg_all(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardProgram0306.c",line = 1221,ram = 2.0,rom = 121;
+FCM_display_all(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardProgram0306.c",line = 1293,ram = 1.0,rom = 92;
+FC_CAL_UART_Init_1(void):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_UART.c",line = 490,ram = 0.0,rom = 15;
+FC_CAL_UART_Receive_1(unsigned char):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_UART.c",line = 646,ram = 9.0,rom = 88;
+FCD_RS2320_ReceiveRS232Char(unsigned char):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardProgram0306.c",line = 337,ram = 3.0,rom = 10;
+FCD_RS2320_ReceiveRS232String(unsigned char*,unsigned char,unsigned char,unsigned char):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardProgram0306.c",line = 345,ram = 11.0,rom = 58;
+main(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardProgram0306.c",line = 1447,ram = 2.0,rom = 421;
+interrupt(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardProgram0306.c",line = 1717,ram = 0.0,rom = 11;
+delay_us(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 5;
+delay_ms(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 44;
+_startup(void):"NoSourceFile",line = 0,ram = 0.0,rom = 73;
+#HEAP_BLOCK: 0, 272, 96;
+#HEAP_BLOCK: 1, 400, 96;
+#HEAP_BLOCK: 2, 184, 56;

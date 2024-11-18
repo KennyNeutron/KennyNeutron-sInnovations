@@ -1,0 +1,30 @@
+// SourceBoost Linker Function Resource Usage Dump
+
+#GLOBAL:"global",line = 0,ram = 59.1,rom = 0;
+__div_16_16(unsigned short,unsigned short):"E:\Prg\compiler.trunk\picantc\libc\div.c",line = 116,ram = 9.0,rom = 31;
+__rem_16_16(unsigned short,unsigned short):"E:\Prg\compiler.trunk\picantc\libc\div.c",line = 145,ram = 9.0,rom = 31;
+FCM_databank(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims final working 20190120.c",line = 519,ram = 0.0,rom = 64;
+FCM_display(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims final working 20190120.c",line = 623,ram = 2.0,rom = 91;
+FCM_display_win1(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims final working 20190120.c",line = 707,ram = 2.0,rom = 112;
+FCM_display_win2(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims final working 20190120.c",line = 776,ram = 2.0,rom = 112;
+FCM_display_win3(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims final working 20190120.c",line = 845,ram = 2.0,rom = 112;
+FCM_recieve(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims final working 20190120.c",line = 910,ram = 0.0,rom = 166;
+FCD_RS2320_ReceiveRS232Char(unsigned char):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims final working 20190120.c",line = 471,ram = 3.0,rom = 8;
+FCM_reset(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims final working 20190120.c",line = 1140,ram = 0.0,rom = 131;
+FCD_PWM0_Enable(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims final working 20190120.c",line = 410,ram = 0.0,rom = 10;
+FCD_PWM0_SetDutyCycle(unsigned char):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims final working 20190120.c",line = 425,ram = 1.0,rom = 4;
+FCD_PWM0_Disable(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims final working 20190120.c",line = 418,ram = 0.0,rom = 2;
+FC_CAL_PWM_Enable_Channel_1(void):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_PWM.c",line = 64,ram = 0.0,rom = 8;
+FC_CAL_PWM_Disable_Channel_1(void):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_PWM.c",line = 237,ram = 0.0,rom = 6;
+FC_CAL_PWM_Set_Duty_8Bit_1(unsigned char):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_PWM.c",line = 331,ram = 0.0,rom = 3;
+FC_CAL_PWM_Change_Period_1(unsigned char,unsigned short):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_PWM.c",line = 375,ram = 0.0,rom = 32;
+FC_CAL_UART_Init_1(void):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_UART.c",line = 490,ram = 0.0,rom = 15;
+FC_CAL_UART_Receive_1(unsigned char):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_UART.c",line = 646,ram = 9.0,rom = 76;
+main(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims final working 20190120.c",line = 1307,ram = 1.0,rom = 162;
+interrupt(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims final working 20190120.c",line = 1570,ram = 0.0,rom = 11;
+delay_us(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 5;
+delay_ms(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 44;
+_startup(void):"NoSourceFile",line = 0,ram = 0.0,rom = 48;
+#HEAP_BLOCK: 0, 160, 95;
+#HEAP_BLOCK: 1, 288, 80;
+#HEAP_BLOCK: 2, 107, 5;

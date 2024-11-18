@@ -1,0 +1,17 @@
+// SourceBoost Linker Function Resource Usage Dump
+
+#GLOBAL:"global",line = 0,ram = 39.7,rom = 0;
+FCM_scan_row1(void):"D:\KennyNeutronsInnovations\AC\FlowCode\Equipment3.c",line = 228,ram = 2.0,rom = 77;
+FCM_scan_row2(void):"D:\KennyNeutronsInnovations\AC\FlowCode\Equipment3.c",line = 273,ram = 2.0,rom = 77;
+FCM_scan_row3(void):"D:\KennyNeutronsInnovations\AC\FlowCode\Equipment3.c",line = 318,ram = 2.0,rom = 77;
+FCD_LED0_LEDOn(void):"D:\KennyNeutronsInnovations\AC\FlowCode\Equipment3.c",line = 173,ram = 0.0,rom = 6;
+FCD_LED0_LEDOff(void):"D:\KennyNeutronsInnovations\AC\FlowCode\Equipment3.c",line = 184,ram = 0.0,rom = 6;
+FCD_LED1_LEDOn(void):"D:\KennyNeutronsInnovations\AC\FlowCode\Equipment3.c",line = 200,ram = 0.0,rom = 6;
+FCD_LED1_LEDOff(void):"D:\KennyNeutronsInnovations\AC\FlowCode\Equipment3.c",line = 211,ram = 0.0,rom = 6;
+main(void):"D:\KennyNeutronsInnovations\AC\FlowCode\Equipment3.c",line = 362,ram = 8.0,rom = 142;
+interrupt(void):"D:\KennyNeutronsInnovations\AC\FlowCode\Equipment3.c",line = 572,ram = 0.0,rom = 11;
+delay_ms(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 12;
+_startup(void):"NoSourceFile",line = 0,ram = 0.0,rom = 51;
+#HEAP_BLOCK: 0, 160, 95;
+#HEAP_BLOCK: 1, 288, 80;
+#HEAP_BLOCK: 2, 80, 32;

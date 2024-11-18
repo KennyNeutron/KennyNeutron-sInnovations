@@ -1,0 +1,10 @@
+// SourceBoost Linker Function Resource Usage Dump
+
+#GLOBAL:"global",line = 0,ram = 37.1,rom = 0;
+main(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\595test.c",line = 125,ram = 2.0,rom = 112;
+interrupt(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\595test.c",line = 237,ram = 0.0,rom = 11;
+delay_us(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 5;
+_startup(void):"NoSourceFile",line = 0,ram = 0.0,rom = 41;
+#HEAP_BLOCK: 0, 160, 95;
+#HEAP_BLOCK: 1, 288, 80;
+#HEAP_BLOCK: 2, 71, 41;

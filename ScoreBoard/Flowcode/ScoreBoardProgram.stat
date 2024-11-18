@@ -1,0 +1,25 @@
+// SourceBoost Linker Function Resource Usage Dump
+
+#GLOBAL:"global",line = 0,ram = 56.4,rom = 0;
+__div_8_8(unsigned char,unsigned char):"E:\Prg\compiler.trunk\picantc\libc\div.c",line = 176,ram = 5.0,rom = 17;
+__rem_8_8(unsigned char,unsigned char):"E:\Prg\compiler.trunk\picantc\libc\div.c",line = 206,ram = 5.0,rom = 17;
+FCM_off_all(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardProgram.c",line = 363,ram = 0.0,rom = 18;
+FCM_data_bank(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardProgram.c",line = 385,ram = 0.0,rom = 64;
+FCM_latch(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardProgram.c",line = 489,ram = 1.0,rom = 21;
+FCM_score_data_register(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardProgram.c",line = 511,ram = 2.0,rom = 59;
+FCM_display_score(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardProgram.c",line = 559,ram = 1.0,rom = 59;
+FCM_display_time(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardProgram.c",line = 668,ram = 1.0,rom = 59;
+FCM_time_data_register(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardProgram.c",line = 777,ram = 2.0,rom = 59;
+FCM_foulperiod_data_register(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardProgram.c",line = 825,ram = 2.0,rom = 59;
+FCM_foulperiod_display(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardProgram.c",line = 873,ram = 1.0,rom = 59;
+FC_CAL_UART_Init_1(void):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_UART.c",line = 490,ram = 0.0,rom = 15;
+FC_CAL_UART_Receive_1(unsigned char):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_UART.c",line = 646,ram = 9.0,rom = 76;
+FCD_RS2320_ReceiveRS232Char(unsigned char):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardProgram.c",line = 315,ram = 3.0,rom = 8;
+main(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardProgram.c",line = 978,ram = 8.0,rom = 320;
+interrupt(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardProgram.c",line = 1345,ram = 0.0,rom = 11;
+delay_us(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 5;
+_startup(void):"NoSourceFile",line = 0,ram = 0.0,rom = 56;
+#HEAP_BLOCK: 0, 272, 111;
+#HEAP_BLOCK: 1, 400, 96;
+#HEAP_BLOCK: 2, 160, 80;
+#HEAP_BLOCK: 3, 106, 6;

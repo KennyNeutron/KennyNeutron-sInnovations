@@ -1,0 +1,23 @@
+// SourceBoost Linker Function Resource Usage Dump
+
+#GLOBAL:"global",line = 0,ram = 41.0,rom = 0;
+FCM_row1_forward(void):"D:\KennyNeutronsInnovations\VendoMachine\Flowcode\VendoMachine.c",line = 336,ram = 1.0,rom = 21;
+FCM_row3_forward(void):"D:\KennyNeutronsInnovations\VendoMachine\Flowcode\VendoMachine.c",line = 380,ram = 1.0,rom = 21;
+FCM_row4_forward(void):"D:\KennyNeutronsInnovations\VendoMachine\Flowcode\VendoMachine.c",line = 402,ram = 1.0,rom = 21;
+FCM_row2_forward(void):"D:\KennyNeutronsInnovations\VendoMachine\Flowcode\VendoMachine.c",line = 468,ram = 1.0,rom = 21;
+FCM_row1_stop(void):"D:\KennyNeutronsInnovations\VendoMachine\Flowcode\VendoMachine.c",line = 512,ram = 0.0,rom = 18;
+FCM_row2_stop(void):"D:\KennyNeutronsInnovations\VendoMachine\Flowcode\VendoMachine.c",line = 534,ram = 0.0,rom = 18;
+FCM_row3_stop(void):"D:\KennyNeutronsInnovations\VendoMachine\Flowcode\VendoMachine.c",line = 556,ram = 0.0,rom = 18;
+FCM_row4_stop(void):"D:\KennyNeutronsInnovations\VendoMachine\Flowcode\VendoMachine.c",line = 578,ram = 0.0,rom = 18;
+FC_CAL_UART_Init_1(void):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_UART.c",line = 490,ram = 0.0,rom = 15;
+FC_CAL_UART_Receive_1(unsigned char):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_UART.c",line = 646,ram = 9.0,rom = 76;
+FCD_RS2320_ReceiveRS232Char(unsigned char):"D:\KennyNeutronsInnovations\VendoMachine\Flowcode\VendoMachine.c",line = 288,ram = 3.0,rom = 8;
+main(void):"D:\KennyNeutronsInnovations\VendoMachine\Flowcode\VendoMachine.c",line = 599,ram = 6.0,rom = 303;
+interrupt(void):"D:\KennyNeutronsInnovations\VendoMachine\Flowcode\VendoMachine.c",line = 975,ram = 0.0,rom = 11;
+delay_us(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 10;
+delay_ms(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 12;
+delay_s(unsigned char):"NoSourceFile",line = 0,ram = 1.0,rom = 15;
+_startup(void):"NoSourceFile",line = 0,ram = 0.0,rom = 43;
+#HEAP_BLOCK: 0, 160, 95;
+#HEAP_BLOCK: 1, 288, 80;
+#HEAP_BLOCK: 2, 86, 26;

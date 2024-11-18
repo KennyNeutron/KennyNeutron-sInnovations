@@ -1,0 +1,19 @@
+// SourceBoost Linker Function Resource Usage Dump
+
+#GLOBAL:"global",line = 0,ram = 38.2,rom = 0;
+FCM_int(void):"D:\KennyNeutronsInnovations\NICE2018\Program\EMRA_FINAL.c",line = 191,ram = 0.0,rom = 1;
+FCM_Switch_Check(void):"D:\KennyNeutronsInnovations\NICE2018\Program\EMRA_FINAL.c",line = 199,ram = 3.0,rom = 26;
+FCM_repel(void):"D:\KennyNeutronsInnovations\NICE2018\Program\EMRA_FINAL.c",line = 218,ram = 1.0,rom = 27;
+FCD_LED0_LEDOn(void):"D:\KennyNeutronsInnovations\NICE2018\Program\EMRA_FINAL.c",line = 140,ram = 0.0,rom = 6;
+FCD_LED0_LEDOff(void):"D:\KennyNeutronsInnovations\NICE2018\Program\EMRA_FINAL.c",line = 151,ram = 0.0,rom = 6;
+FCD_LED1_LEDOn(void):"D:\KennyNeutronsInnovations\NICE2018\Program\EMRA_FINAL.c",line = 167,ram = 0.0,rom = 6;
+FCD_LED1_LEDOff(void):"D:\KennyNeutronsInnovations\NICE2018\Program\EMRA_FINAL.c",line = 178,ram = 0.0,rom = 6;
+main(void):"D:\KennyNeutronsInnovations\NICE2018\Program\EMRA_FINAL.c",line = 247,ram = 3.0,rom = 151;
+interrupt(void):"D:\KennyNeutronsInnovations\NICE2018\Program\EMRA_FINAL.c",line = 472,ram = 0.0,rom = 17;
+delay_us(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 10;
+delay_ms(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 12;
+delay_s(unsigned char):"NoSourceFile",line = 0,ram = 1.0,rom = 15;
+_startup(void):"NoSourceFile",line = 0,ram = 0.0,rom = 42;
+#HEAP_BLOCK: 0, 160, 95;
+#HEAP_BLOCK: 1, 288, 80;
+#HEAP_BLOCK: 2, 73, 39;

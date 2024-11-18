@@ -1,0 +1,22 @@
+// SourceBoost Linker Function Resource Usage Dump
+
+#GLOBAL:"global",line = 0,ram = 56.3,rom = 0;
+__div_8_8(unsigned char,unsigned char):"E:\Prg\compiler.trunk\picantc\libc\div.c",line = 176,ram = 5.0,rom = 17;
+__rem_8_8(unsigned char,unsigned char):"E:\Prg\compiler.trunk\picantc\libc\div.c",line = 206,ram = 5.0,rom = 17;
+FCM_off_all(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardDMTester.c",line = 156,ram = 0.0,rom = 18;
+FCM_data_bank(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardDMTester.c",line = 178,ram = 0.0,rom = 64;
+FCM_latch(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardDMTester.c",line = 282,ram = 1.0,rom = 21;
+FCM_score_data_register(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardDMTester.c",line = 304,ram = 2.0,rom = 59;
+FCM_display_score(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardDMTester.c",line = 352,ram = 1.0,rom = 65;
+FCM_display_time(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardDMTester.c",line = 469,ram = 1.0,rom = 65;
+FCM_time_data_register(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardDMTester.c",line = 586,ram = 2.0,rom = 59;
+FCM_foulperiod_data_register(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardDMTester.c",line = 634,ram = 2.0,rom = 59;
+FCM_foulperiod_display(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardDMTester.c",line = 682,ram = 1.0,rom = 65;
+main(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardDMTester.c",line = 795,ram = 1.0,rom = 172;
+interrupt(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\ScoreBoardDMTester.c",line = 969,ram = 0.0,rom = 11;
+delay_ms(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 44;
+_startup(void):"NoSourceFile",line = 0,ram = 0.0,rom = 53;
+#HEAP_BLOCK: 0, 272, 111;
+#HEAP_BLOCK: 1, 400, 96;
+#HEAP_BLOCK: 2, 160, 80;
+#HEAP_BLOCK: 3, 93, 19;

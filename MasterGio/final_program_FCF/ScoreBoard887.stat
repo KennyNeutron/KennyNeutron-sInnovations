@@ -1,0 +1,23 @@
+// SourceBoost Linker Function Resource Usage Dump
+
+#GLOBAL:"global",line = 0,ram = 119.3,rom = 0;
+__div_32_32(unsigned long,unsigned long):"E:\Prg\compiler.trunk\picantc\libc\div.c",line = 44,ram = 17.0,rom = 57;
+__rem_32_32(unsigned long,unsigned long):"E:\Prg\compiler.trunk\picantc\libc\div.c",line = 79,ram = 17.0,rom = 57;
+__div_8_8(unsigned char,unsigned char):"E:\Prg\compiler.trunk\picantc\libc\div.c",line = 176,ram = 5.0,rom = 17;
+__rem_8_8(unsigned char,unsigned char):"E:\Prg\compiler.trunk\picantc\libc\div.c",line = 206,ram = 5.0,rom = 17;
+__mul_32u_32u(unsigned long,unsigned long):"E:\Prg\compiler.trunk\picantc\libc\mul.c",line = 447,ram = 13.0,rom = 35;
+FCI_RIGHTSTRING(unsigned char*,unsigned char,unsigned char,unsigned char*,unsigned char):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_String.c",line = 158,ram = 11.0,rom = 81;
+FCI_STRING_TO_INT(unsigned char*,unsigned char):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_String.c",line = 514,ram = 14.0,rom = 151;
+FCM_data_bank(void):"D:\KennyNeutronsInnovations\MasterGio\final_program_FCF\ScoreBoard887.c",line = 387,ram = 0.0,rom = 226;
+FCM_register(void):"D:\KennyNeutronsInnovations\MasterGio\final_program_FCF\ScoreBoard887.c",line = 690,ram = 2.0,rom = 606;
+FC_CAL_UART_Init_1(void):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_UART.c",line = 490,ram = 0.0,rom = 15;
+FC_CAL_UART_Receive_1(unsigned char):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_UART.c",line = 646,ram = 9.0,rom = 88;
+FCD_RS2320_ReceiveRS232Char(unsigned char):"D:\KennyNeutronsInnovations\MasterGio\final_program_FCF\ScoreBoard887.c",line = 339,ram = 3.0,rom = 8;
+FCD_RS2320_ReceiveRS232String(unsigned char*,unsigned char,unsigned char,unsigned char):"D:\KennyNeutronsInnovations\MasterGio\final_program_FCF\ScoreBoard887.c",line = 347,ram = 11.0,rom = 58;
+main(void):"D:\KennyNeutronsInnovations\MasterGio\final_program_FCF\ScoreBoard887.c",line = 1351,ram = 1.0,rom = 592;
+interrupt(void):"D:\KennyNeutronsInnovations\MasterGio\final_program_FCF\ScoreBoard887.c",line = 1578,ram = 0.0,rom = 11;
+delay_us(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 5;
+_startup(void):"NoSourceFile",line = 0,ram = 0.0,rom = 94;
+#HEAP_BLOCK: 0, 272, 96;
+#HEAP_BLOCK: 1, 400, 96;
+#HEAP_BLOCK: 2, 211, 29;

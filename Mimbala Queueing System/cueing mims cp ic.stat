@@ -1,0 +1,13 @@
+// SourceBoost Linker Function Resource Usage Dump
+
+#GLOBAL:"global",line = 0,ram = 36.0,rom = 0;
+FC_CAL_UART_Init_1(void):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_UART.c",line = 490,ram = 0.0,rom = 15;
+FC_CAL_UART_Send_1(unsigned short):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_UART.c",line = 616,ram = 0.0,rom = 5;
+FCD_RS2320_SendRS232Char(signed short):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims cp ic.c",line = 252,ram = 2.0,rom = 6;
+FCD_RS2320_SendRS232String(unsigned char*,unsigned char):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims cp ic.c",line = 260,ram = 4.0,rom = 26;
+main(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims cp ic.c",line = 319,ram = 2.0,rom = 78;
+interrupt(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims cp ic.c",line = 412,ram = 0.0,rom = 11;
+_startup(void):"NoSourceFile",line = 0,ram = 0.0,rom = 41;
+#HEAP_BLOCK: 0, 160, 95;
+#HEAP_BLOCK: 1, 288, 80;
+#HEAP_BLOCK: 2, 75, 37;

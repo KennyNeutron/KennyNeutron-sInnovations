@@ -1,0 +1,10 @@
+// SourceBoost Linker Function Resource Usage Dump
+
+#GLOBAL:"global",line = 0,ram = 35.0,rom = 0;
+main(void):"C:\Users\BlueFlame17\Desktop\NICE2018\Program\EMRA_test.c",line = 502,ram = 1.0,rom = 34;
+interrupt(void):"C:\Users\BlueFlame17\Desktop\NICE2018\Program\EMRA_test.c",line = 547,ram = 0.0,rom = 11;
+delay_us(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 10;
+_startup(void):"NoSourceFile",line = 0,ram = 0.0,rom = 40;
+#HEAP_BLOCK: 0, 160, 95;
+#HEAP_BLOCK: 1, 288, 80;
+#HEAP_BLOCK: 2, 67, 45;

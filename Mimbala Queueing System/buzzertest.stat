@@ -1,0 +1,16 @@
+// SourceBoost Linker Function Resource Usage Dump
+
+#GLOBAL:"global",line = 0,ram = 35.0,rom = 0;
+FC_CAL_PWM_Enable_Channel_1(void):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_PWM.c",line = 64,ram = 0.0,rom = 8;
+FC_CAL_PWM_Set_Duty_8Bit_1(unsigned char):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_PWM.c",line = 331,ram = 0.0,rom = 3;
+FC_CAL_PWM_Change_Period_1(unsigned char,unsigned short):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_PWM.c",line = 375,ram = 0.0,rom = 32;
+FCD_PWM0_Enable(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\buzzertest.c",line = 234,ram = 0.0,rom = 10;
+FCD_PWM0_SetDutyCycle(unsigned char):"C:\Users\Acer-PC\Desktop\mimbala cueing\buzzertest.c",line = 249,ram = 1.0,rom = 4;
+main(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\buzzertest.c",line = 276,ram = 0.0,rom = 21;
+interrupt(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\buzzertest.c",line = 317,ram = 0.0,rom = 11;
+delay_ms(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 12;
+delay_s(unsigned char):"NoSourceFile",line = 0,ram = 1.0,rom = 15;
+_startup(void):"NoSourceFile",line = 0,ram = 0.0,rom = 40;
+#HEAP_BLOCK: 0, 160, 95;
+#HEAP_BLOCK: 1, 288, 80;
+#HEAP_BLOCK: 2, 69, 43;

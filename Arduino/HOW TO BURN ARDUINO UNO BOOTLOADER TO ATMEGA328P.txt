@@ -1,0 +1,30 @@
+HOW TO BURN ARDUINO UNO BOOTLOADER TO ATMEGA328P
+
+Requirements:
+2-Arduino Uno Boards
+1-ATMEGA3228P IC (without bootloader burned in)
+6-Male to Male Jumper Wires
+
+
+Arduino1- Will act as ISP Programmer
+Arduino2- Will act as a burning hardware for the ATMEGA328P
+
+Connections:
+
+Arduino1	=========>	Arduino2
+
+GND		=========>	GND
+5V		=========>	5V
+Pin10		=========>	Reset
+Pin11		=========>	Pin11
+Pin12		=========>	Pin12
+Pin13		=========>	Pin13
+
+STEPS:
+
+1. Connect Arduino1 to PC
+2. Load the Arduino ISP code from the example codes
+3. Upload the code to Arduino1
+4. Goto tools>Programmer and set it to "Arduino as ISP"
+5. Goto tools>Burn Bootloader
+6. Wait until done.

@@ -1,0 +1,19 @@
+// SourceBoost Linker Function Resource Usage Dump
+
+#GLOBAL:"global",line = 0,ram = 49.0,rom = 0;
+__div_16_16(unsigned short,unsigned short):"E:\Prg\compiler.trunk\picantc\libc\div.c",line = 116,ram = 9.0,rom = 31;
+__rem_16_16(unsigned short,unsigned short):"E:\Prg\compiler.trunk\picantc\libc\div.c",line = 145,ram = 9.0,rom = 31;
+FCM_databank(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims.c",line = 338,ram = 0.0,rom = 64;
+FCM_show_display(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims.c",line = 442,ram = 1.0,rom = 58;
+FCM_register(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims.c",line = 495,ram = 1.0,rom = 27;
+FCM_display_window1(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims.c",line = 526,ram = 0.0,rom = 20;
+FC_CAL_UART_Init_1(void):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_UART.c",line = 490,ram = 0.0,rom = 15;
+FC_CAL_UART_Receive_1(unsigned char):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_UART.c",line = 646,ram = 9.0,rom = 76;
+FCD_RS2320_ReceiveRS232Char(unsigned char):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims.c",line = 290,ram = 3.0,rom = 8;
+main(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims.c",line = 776,ram = 0.0,rom = 87;
+interrupt(void):"C:\Users\Acer-PC\Desktop\mimbala cueing\cueing mims.c",line = 861,ram = 0.0,rom = 11;
+delay_us(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 5;
+_startup(void):"NoSourceFile",line = 0,ram = 0.0,rom = 40;
+#HEAP_BLOCK: 0, 160, 95;
+#HEAP_BLOCK: 1, 288, 80;
+#HEAP_BLOCK: 2, 93, 19;

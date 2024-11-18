@@ -1,0 +1,37 @@
+// SourceBoost Linker Function Resource Usage Dump
+
+#GLOBAL:"global",line = 0,ram = 39.4,rom = 0;
+__div_16_16(unsigned short,unsigned short):"E:\Prg\compiler.trunk\picantc\libc\div.c",line = 116,ram = 9.0,rom = 31;
+Wdt_Delay_Ms(unsigned char):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_Delay.c",line = 118,ram = 2.0,rom = 11;
+FCM_Equipment1(void):"D:\KennyNeutronsInnovations\AC\FlowCode\LCDtest.c",line = 928,ram = 12.0,rom = 140;
+FCD_RS2320_SendRS232String(unsigned char*,unsigned char):"D:\KennyNeutronsInnovations\AC\FlowCode\LCDtest.c",line = 827,ram = 4.0,rom = 26;
+FCD_PWM0_SetDutyCycle(unsigned char):"D:\KennyNeutronsInnovations\AC\FlowCode\LCDtest.c",line = 900,ram = 1.0,rom = 4;
+FCM_Equipment2(void):"D:\KennyNeutronsInnovations\AC\FlowCode\LCDtest.c",line = 1050,ram = 12.0,rom = 140;
+FCM_Equipment3(void):"D:\KennyNeutronsInnovations\AC\FlowCode\LCDtest.c",line = 1172,ram = 12.0,rom = 140;
+FCM_init(void):"D:\KennyNeutronsInnovations\AC\FlowCode\LCDtest.c",line = 1294,ram = 8.0,rom = 133;
+FCM_check(void):"D:\KennyNeutronsInnovations\AC\FlowCode\LCDtest.c",line = 1372,ram = 16.0,rom = 399;
+FCM_Equipment4(void):"D:\KennyNeutronsInnovations\AC\FlowCode\LCDtest.c",line = 1564,ram = 12.0,rom = 140;
+FCD_LCDDisplay0_RawSend(unsigned char,unsigned char):"D:\KennyNeutronsInnovations\AC\FlowCode\LCDtest.c",line = 492,ram = 3.0,rom = 65;
+FCD_LCDDisplay0_Start(void):"D:\KennyNeutronsInnovations\AC\FlowCode\LCDtest.c",line = 542,ram = 0.0,rom = 85;
+FCD_LCDDisplay0_Clear(void):"D:\KennyNeutronsInnovations\AC\FlowCode\LCDtest.c",line = 575,ram = 0.0,rom = 17;
+FCD_LCDDisplay0_Cursor(unsigned char,unsigned char):"D:\KennyNeutronsInnovations\AC\FlowCode\LCDtest.c",line = 605,ram = 2.0,rom = 17;
+FCD_LCDDisplay0_PrintNumber(signed short):"D:\KennyNeutronsInnovations\AC\FlowCode\LCDtest.c",line = 643,ram = 7.0,rom = 238;
+FCD_LCDDisplay0_PrintString(unsigned char*,unsigned char):"D:\KennyNeutronsInnovations\AC\FlowCode\LCDtest.c",line = 701,ram = 4.0,rom = 28;
+FC_CAL_UART_Init_1(void):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_UART.c",line = 490,ram = 0.0,rom = 15;
+FC_CAL_UART_Send_1(unsigned short):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_UART.c",line = 616,ram = 0.0,rom = 5;
+FC_CAL_UART_Receive_1(unsigned char):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_UART.c",line = 646,ram = 9.0,rom = 76;
+FCD_RS2320_ReceiveRS232Char(unsigned char):"D:\KennyNeutronsInnovations\AC\FlowCode\LCDtest.c",line = 839,ram = 3.0,rom = 8;
+FC_CAL_PWM_Enable_Channel_1(void):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_PWM.c",line = 64,ram = 0.0,rom = 8;
+FC_CAL_PWM_Set_Duty_8Bit_1(unsigned char):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_PWM.c",line = 331,ram = 0.0,rom = 3;
+FC_CAL_PWM_Change_Period_1(unsigned char,unsigned short):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_PWM.c",line = 375,ram = 0.0,rom = 32;
+FCD_PWM0_Enable(void):"D:\KennyNeutronsInnovations\AC\FlowCode\LCDtest.c",line = 885,ram = 0.0,rom = 10;
+main(void):"D:\KennyNeutronsInnovations\AC\FlowCode\LCDtest.c",line = 1685,ram = 16.0,rom = 410;
+interrupt(void):"D:\KennyNeutronsInnovations\AC\FlowCode\LCDtest.c",line = 2007,ram = 0.0,rom = 11;
+delay_us(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 5;
+delay_10us(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 14;
+delay_ms(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 44;
+_startup(void):"NoSourceFile",line = 0,ram = 0.0,rom = 68;
+#HEAP_BLOCK: 0, 272, 111;
+#HEAP_BLOCK: 1, 400, 96;
+#HEAP_BLOCK: 2, 160, 80;
+#HEAP_BLOCK: 3, 95, 17;

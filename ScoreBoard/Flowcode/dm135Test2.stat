@@ -1,0 +1,18 @@
+// SourceBoost Linker Function Resource Usage Dump
+
+#GLOBAL:"global",line = 0,ram = 52.1,rom = 0;
+FCM_databank(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\dm135Test2.c",line = 338,ram = 0.0,rom = 64;
+FCM_display(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\dm135Test2.c",line = 443,ram = 2.0,rom = 168;
+FCM_Data_recv(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\dm135Test2.c",line = 599,ram = 0.0,rom = 42;
+FCD_RS2320_ReceiveRS232Char(unsigned char):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\dm135Test2.c",line = 290,ram = 3.0,rom = 8;
+FCD_RS2320_SendRS232Char(signed short):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\dm135Test2.c",line = 270,ram = 2.0,rom = 6;
+FC_CAL_UART_Init_1(void):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_UART.c",line = 490,ram = 0.0,rom = 15;
+FC_CAL_UART_Send_1(unsigned short):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_UART.c",line = 616,ram = 0.0,rom = 5;
+FC_CAL_UART_Receive_1(unsigned char):"C:\Program Files (x86)\Flowcode\v5\CAL\PIC\PIC_CAL_UART.c",line = 646,ram = 9.0,rom = 76;
+main(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\dm135Test2.c",line = 655,ram = 0.0,rom = 36;
+interrupt(void):"D:\KennyNeutronsInnovations\ScoreBoard\Flowcode\dm135Test2.c",line = 723,ram = 0.0,rom = 11;
+delay_us(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 10;
+_startup(void):"NoSourceFile",line = 0,ram = 0.0,rom = 47;
+#HEAP_BLOCK: 0, 160, 95;
+#HEAP_BLOCK: 1, 288, 80;
+#HEAP_BLOCK: 2, 94, 18;

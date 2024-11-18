@@ -1,0 +1,19 @@
+// SourceBoost Linker Function Resource Usage Dump
+
+#GLOBAL:"global",line = 0,ram = 41.3,rom = 0;
+FCM_int(void):"C:\Users\BlueFlame17\Desktop\NICE2018\Program\Test20180723.c",line = 224,ram = 0.0,rom = 1;
+FCM_Switch_Check(void):"C:\Users\BlueFlame17\Desktop\NICE2018\Program\Test20180723.c",line = 232,ram = 3.0,rom = 26;
+FCM_repel(void):"C:\Users\BlueFlame17\Desktop\NICE2018\Program\Test20180723.c",line = 251,ram = 1.0,rom = 27;
+FCD_LED0_LEDOn(void):"C:\Users\BlueFlame17\Desktop\NICE2018\Program\Test20180723.c",line = 171,ram = 0.0,rom = 6;
+FCD_LED0_LEDOff(void):"C:\Users\BlueFlame17\Desktop\NICE2018\Program\Test20180723.c",line = 182,ram = 0.0,rom = 6;
+FCD_LED1_LEDOn(void):"C:\Users\BlueFlame17\Desktop\NICE2018\Program\Test20180723.c",line = 198,ram = 0.0,rom = 6;
+FCD_LED1_LEDOff(void):"C:\Users\BlueFlame17\Desktop\NICE2018\Program\Test20180723.c",line = 209,ram = 0.0,rom = 6;
+main(void):"C:\Users\BlueFlame17\Desktop\NICE2018\Program\Test20180723.c",line = 280,ram = 3.0,rom = 324;
+interrupt(void):"C:\Users\BlueFlame17\Desktop\NICE2018\Program\Test20180723.c",line = 797,ram = 0.0,rom = 17;
+delay_us(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 10;
+delay_ms(unsigned char):"NoSourceFile",line = 0,ram = 0.0,rom = 12;
+delay_s(unsigned char):"NoSourceFile",line = 0,ram = 1.0,rom = 15;
+_startup(void):"NoSourceFile",line = 0,ram = 0.0,rom = 43;
+#HEAP_BLOCK: 0, 160, 95;
+#HEAP_BLOCK: 1, 288, 80;
+#HEAP_BLOCK: 2, 76, 36;

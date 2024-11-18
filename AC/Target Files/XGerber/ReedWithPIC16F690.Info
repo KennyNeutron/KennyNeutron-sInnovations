@@ -1,0 +1,32 @@
+CAM output for current project ReedWithPIC16F690.T3001
+Output on 18. Jan 2019, 01:17h
+Current project created using TARGET 19.7.0.4 discover
+Output created using TARGET 3001! V19.7.0.4
+Current Project from TARGET NC version: Commercial use is criminal!
+DELIVERY ADDRESS:
+  
+  
+  
+  GB- 
+  Tel: 
+  FAX: 
+  eMail: 
+Size of PCB: 80 mm x 60 mm
+
+Description of created files as follows:
+
+ReedWithPIC16F690.Top = 16 = Copper top L1   ( *.Top )
+ReedWithPIC16F690.Bot = 2 = Copper bottom L2   ( *.Bot )
+ReedWithPIC16F690.Tool = drill tool list
+ReedWithPIC16F690.Drill = Galvanised drills
+ReedWithPIC16F690.Outline = 23 = PCB outline   ( *.Outline )
+ReedWithPIC16F690.StopTop = 18 = Solder stop mask top   ( *.StopTop )
+ReedWithPIC16F690.StopBot = 4 = Solder stop mask bottom   ( *.StopBot )
+ReedWithPIC16F690.PosiTop = 21 = Placement print top   ( *.PosiTop )
+ReedWithPIC16F690.PosiBot = 7 = Placement print bottom   ( *.PosiBot )
+ReedWithPIC16F690.PasteBot = 5 = Solder paste bottom   ( *.PasteBot )
+ReedWithPIC16F690.Apr = TARGET 3001! aperture list
+ReedWithPIC16F690.Whl = Eagle compatible aperture list
+
+
+Caution: Thinest text is smaller than 0.150mm: (0.130 at 1.36075 | 23.5335) on layer 7

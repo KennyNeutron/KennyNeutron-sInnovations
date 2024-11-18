@@ -1,0 +1,26 @@
+HOW TO RENAME AND CHANGE PW HC05 BLUETOOTH MODULE USING ARDUINO
+
+CONNECTION:
+
+	HC05	===========>	Arduino
+	TX			TX (connect after uploading)
+	RX			RX (connect after uploading)
+	3.3V			5V
+	GND			GND
+	EN			5V
+
+1. Keep the switch pressed (use clip)
+
+2. Upload a blank program to the arduino
+
+3. Connect the rx and tx
+
+4. Open serial monitor and set to: Both NL&CR @ 38400baud
+
+4. Commands:
+
+	AT			(Check Communication)
+	AT+PSWD?		(View current password)
+	AT+NAME?		(View current name)
+	AT+PSWD=(new password)
+	AT+NAME=(new name)
